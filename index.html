@@ -23,16 +23,20 @@
   <main class="layout">
     <section class="panel reservations">
       <div class="panel-header">
-        <h2>Arrivals</h2>
-        <p class="muted">Tap a guest to see the AI summary and recommendations.</p>
+        <div>
+          <p class="eyebrow">Roster</p>
+          <h2>Arrivals</h2>
+          <p class="muted">Tap a guest to see the AI summary and recommendations.</p>
+        </div>
+        <div class="pill" id="selection-pill">Select a reservation to begin</div>
       </div>
       <ul id="reservation-list" class="reservation-list"></ul>
     </section>
 
     <section class="panel detail">
       <div class="panel-header">
+        <p class="eyebrow">Decision workspace</p>
         <h2>Guest profile &amp; recommendations</h2>
-        <div class="pill" id="selection-pill">Select a reservation to begin</div>
       </div>
 
       <div class="detail-body" id="detail-body">

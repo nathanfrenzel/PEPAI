@@ -1,14 +1,14 @@
 :root {
-  --bg: #0e1116;
-  --panel: #111827;
-  --panel-2: #0f172a;
-  --accent: #22c55e;
-  --accent-2: #60a5fa;
+  --bg: #f4f6fb;
+  --panel: #ffffff;
+  --panel-2: #eef2fb;
+  --accent: #2563eb;
+  --accent-2: #22c55e;
   --accent-3: #f59e0b;
-  --text: #e5e7eb;
-  --muted: #9ca3af;
-  --border: #1f2937;
-  --badge: #1f2937;
+  --text: #0f172a;
+  --muted: #64748b;
+  --border: #d9dfeb;
+  --badge: #e9eef7;
   --danger: #ef4444;
 }
 
@@ -19,7 +19,7 @@
 body {
   margin: 0;
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  background: radial-gradient(80% 50% at 50% 0%, rgba(96, 165, 250, 0.08), transparent),
+  background: radial-gradient(80% 50% at 50% 0%, rgba(37, 99, 235, 0.08), transparent),
     radial-gradient(60% 40% at 20% 20%, rgba(34, 197, 94, 0.06), transparent),
     var(--bg);
   color: var(--text);
@@ -33,7 +33,7 @@ h3,
 h4,
 h5,
 h6 {
-  color: #f8fafc;
+  color: #0f172a;
   margin: 0;
 }
 
@@ -84,41 +84,42 @@ a {
   font-size: 13px;
   background: var(--badge);
   border: 1px solid var(--border);
+  color: #1e293b;
 }
 
 .badge-success {
-  color: #bbf7d0;
-  border-color: rgba(34, 197, 94, 0.5);
+  color: #0f5132;
+  border-color: rgba(34, 197, 94, 0.4);
 }
 
 .badge-info {
-  color: #bfdbfe;
-  border-color: rgba(96, 165, 250, 0.5);
+  color: #1d4ed8;
+  border-color: rgba(37, 99, 235, 0.4);
 }
 
 .badge-neutral {
-  color: #e5e7eb;
+  color: #334155;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: 340px 1fr;
+  grid-template-columns: 360px 1fr;
   gap: 16px;
   align-items: start;
 }
 
 .panel {
-  background: linear-gradient(180deg, #0b1220, #0b1324);
+  background: linear-gradient(180deg, #ffffff, #f9fbff);
   border: 1px solid var(--border);
   border-radius: 16px;
-  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 15px 40px rgba(15, 23, 42, 0.08);
   overflow: hidden;
 }
 
 .panel-header {
   padding: 16px 18px 12px;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent);
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.05), transparent);
 }
 
 .panel-header h2 {
@@ -148,13 +149,13 @@ a {
 }
 
 .reservation-item:hover {
-  background: rgba(255, 255, 255, 0.02);
-  border-color: rgba(96, 165, 250, 0.4);
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.4);
 }
 
 .reservation-item.active {
-  background: rgba(96, 165, 250, 0.07);
-  border-color: rgba(96, 165, 250, 0.6);
+  background: rgba(37, 99, 235, 0.12);
+  border-color: rgba(37, 99, 235, 0.6);
 }
 
 .res-meta {
@@ -170,9 +171,9 @@ a {
   padding: 3px 8px;
   font-weight: 600;
   font-size: 12px;
-  border: 1px solid rgba(96, 165, 250, 0.5);
-  color: #bfdbfe;
-  background: rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(37, 99, 235, 0.5);
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.12);
 }
 
 .stay-score {
@@ -180,14 +181,15 @@ a {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #cbd5e1;
+  color: #0f172a;
+  font-weight: 700;
 }
 
 .score-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--accent-2);
 }
 
 .detail-body {
@@ -199,18 +201,19 @@ a {
 
 .detail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 14px;
 }
 
 .card {
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, #0d1626, #0c121e);
+  background: #ffffff;
   border-radius: 12px;
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
 }
 
 .card h3 {
@@ -223,42 +226,85 @@ a {
   gap: 8px;
   border-radius: 999px;
   padding: 6px 12px;
-  background: rgba(37, 99, 235, 0.14);
-  color: #cbd5e1;
-  border: 1px solid rgba(96, 165, 250, 0.4);
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+  border: 1px solid rgba(37, 99, 235, 0.2);
   font-size: 14px;
 }
 
+.pill.subtle {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: var(--border);
+}
+
 .pill-quiet {
-  background: rgba(34, 197, 94, 0.14);
-  border-color: rgba(34, 197, 94, 0.5);
-  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #166534;
 }
 
 .pill-risk {
-  background: rgba(239, 68, 68, 0.14);
-  border-color: rgba(239, 68, 68, 0.5);
-  color: #fecdd3;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #991b1b;
 }
 
 .recommendation {
-  display: flex;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
   gap: 10px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 12px;
+  align-items: start;
+  padding: 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.02);
+  background: linear-gradient(180deg, #ffffff, #f7f9fe);
+}
+
+.recommendations-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rec-main {
+  display: flex;
+  gap: 12px;
+}
+
+.rec-chip {
+  background: #111827;
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-weight: 700;
+  font-size: 12px;
+  height: fit-content;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.rec-side {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.locality {
+  margin-top: 6px;
+  color: #0f172a;
 }
 
 .confidence-bar {
   height: 8px;
-  background: #1f2937;
+  background: #e2e8f0;
   border-radius: 999px;
   width: 160px;
   overflow: hidden;
   border: 1px solid var(--border);
+  margin-left: auto;
 }
 
 .confidence-fill {
@@ -272,10 +318,11 @@ a {
 }
 
 .confidence-fill.low {
-  background: linear-gradient(90deg, var(--muted), #64748b);
+  background: linear-gradient(90deg, var(--muted), #94a3b8);
 }
 
-.actions {
+.actions,
+.rec-actions {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
@@ -283,23 +330,30 @@ a {
 
 .btn {
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
-  color: #e5e7eb;
+  background: #f8fafc;
+  color: #0f172a;
   padding: 10px 14px;
   border-radius: 10px;
   cursor: pointer;
-  font-weight: 600;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  font-weight: 700;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn:hover {
-  border-color: rgba(96, 165, 250, 0.6);
+  border-color: rgba(37, 99, 235, 0.6);
   transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.15);
 }
 
 .btn-primary {
   background: linear-gradient(90deg, #2563eb, #22c55e);
-  border-color: rgba(96, 165, 250, 0.6);
+  border-color: rgba(37, 99, 235, 0.6);
+  color: #ffffff;
+}
+
+.btn-ghost {
+  background: #ffffff;
+  border-color: var(--border);
 }
 
 .key-points {
@@ -312,7 +366,7 @@ a {
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.02);
+  background: #f8fafc;
   display: flex;
   gap: 10px;
   align-items: flex-start;
@@ -321,19 +375,88 @@ a {
 .key-point strong {
   display: block;
   margin-bottom: 4px;
+  text-transform: capitalize;
 }
 
 .dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--accent-2);
+  background: var(--accent);
   margin-top: 6px;
 }
 
 .divider {
   height: 1px;
   background: var(--border);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 12px;
+}
+
+.summary {
+  background: linear-gradient(135deg, #e8f0ff, #ffffff);
+}
+
+.summary-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.summary-copy {
+  color: #0f172a;
+  font-size: 15px;
+}
+
+.summary-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.metrics {
+  background: #ffffff;
+}
+
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.metric {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.action-log {
+  border-style: dashed;
+  color: #0f172a;
+}
+
+.action-log-accepted {
+  border-color: rgba(34, 197, 94, 0.5) !important;
+  background: rgba(34, 197, 94, 0.08) !important;
+}
+
+.action-log-rejected {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+@media (max-width: 1140px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .recommendation {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 960px) {
