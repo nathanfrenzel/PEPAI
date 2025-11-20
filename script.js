@@ -18,8 +18,21 @@ const reservations = [
       arrival: "late",
       dietary: "vegetarian",
       hobbies: "live music, pool time",
+      pillowFirmness: "medium",
+      towels: 3,
+      blankets: 1,
+      pillowCount: 2,
     },
     behaviors: ["mobile key", "late-night snack", "loves local tips"],
+    rawData: {
+      arrivalWindow: "9:30pm",
+      checkoutHabit: "late",
+      tripPurposeDetail: "Birthday weekend with friends",
+      poolInterest: "high",
+      workspaceNeed: "light",
+      coffee: "prefers tea",
+      transport: "rideshare",
+    },
   },
   {
     id: "RES-2019",
@@ -40,8 +53,21 @@ const reservations = [
       arrival: "early",
       desk: "needs ergonomic chair",
       dietary: "no shellfish",
+      pillowFirmness: "soft",
+      towels: 4,
+      blankets: 2,
+      pillowCount: 4,
     },
     behaviors: ["prefers desk space", "early check-in requests", "prints agendas"],
+    rawData: {
+      arrivalWindow: "7:45am",
+      checkoutHabit: "on-time",
+      tripPurposeDetail: "Panel speaker, tech education",
+      poolInterest: "low",
+      workspaceNeed: "ergonomic chair",
+      coffee: "double espresso",
+      transport: "rental car",
+    },
   },
   {
     id: "RES-7742",
@@ -61,8 +87,21 @@ const reservations = [
       view: "courtyard",
       arrival: "evening",
       fitness: "6am gym session",
+      pillowFirmness: "medium-firm",
+      towels: 5,
+      blankets: 1,
+      pillowCount: 3,
     },
     behaviors: ["uses gym", "requests extra towels", "mobile key"],
+    rawData: {
+      arrivalWindow: "6:10pm",
+      checkoutHabit: "early",
+      tripPurposeDetail: "Touring campus with family",
+      poolInterest: "medium",
+      workspaceNeed: "none",
+      coffee: "iced cold brew",
+      transport: "rideshare",
+    },
   },
   {
     id: "RES-9923",
@@ -83,8 +122,21 @@ const reservations = [
       arrival: "late",
       desk: "standing desk requested",
       beverage: "evening tea service",
+      pillowFirmness: "soft",
+      towels: 3,
+      blankets: 1,
+      pillowCount: 4,
     },
     behaviors: ["evening lounge", "remote work", "late checkout"],
+    rawData: {
+      arrivalWindow: "10:40pm",
+      checkoutHabit: "late",
+      tripPurposeDetail: "Remote work blocks + partner visit",
+      poolInterest: "low",
+      workspaceNeed: "standing desk",
+      coffee: "loose leaf tea",
+      transport: "rental car",
+    },
   },
   {
     id: "RES-6645",
@@ -105,8 +157,21 @@ const reservations = [
       arrival: "afternoon",
       dining: "romantic dinner",
       amenity: "late checkout",
+      pillowFirmness: "medium",
+      towels: 4,
+      blankets: 2,
+      pillowCount: 4,
     },
     behaviors: ["digital key", "late checkout", "requests dining recs"],
+    rawData: {
+      arrivalWindow: "3:20pm",
+      checkoutHabit: "late",
+      tripPurposeDetail: "Anniversary with curated dining",
+      poolInterest: "medium",
+      workspaceNeed: "none",
+      coffee: "cappuccino",
+      transport: "rideshare",
+    },
   },
 ];
 
@@ -118,14 +183,7 @@ const recommendationTemplates = [
     action: "Assign quiet stack & prep pillows",
     base: 82,
     drivers: ["noise: quiet", "foam pillows", "away from elevator"],
-  },
-  {
-    id: "city-work",
-    label: "City view work-ready room",
-    description: "Prioritize strong desk setup, near elevators for quick access; deliver extra plush pillows pre-arrival.",
-    action: "Flag desk setup & pillow refresh",
-    base: 76,
-    drivers: ["city view", "desk setup", "plush pillows"],
+    upsell: "Offer $25/night view premium if facing park",
   },
   {
     id: "courtyard-gym",
@@ -134,6 +192,16 @@ const recommendationTemplates = [
     action: "Assign mid floor + add towels",
     base: 70,
     drivers: ["gym access", "quiet wing", "extra towels"],
+    upsell: "Add $15 wellness pass with smoothie credit",
+  },
+  {
+    id: "city-work",
+    label: "City view work-ready room",
+    description: "Prioritize strong desk setup, near elevators for quick access; deliver extra plush pillows pre-arrival.",
+    action: "Flag desk setup & pillow refresh",
+    base: 76,
+    drivers: ["city view", "desk setup", "plush pillows"],
+    upsell: "Offer premium Wi‑Fi or day-pass workspace",
   },
   {
     id: "suite-lounge",
@@ -142,6 +210,7 @@ const recommendationTemplates = [
     action: "Confirm lounge + tea setup",
     base: 80,
     drivers: ["lounge access", "tea service", "late checkout"],
+    upsell: "Offer paid late checkout to 2pm",
   },
   {
     id: "romance-dining",
@@ -150,6 +219,7 @@ const recommendationTemplates = [
     action: "Send dining picks & note late checkout",
     base: 78,
     drivers: ["romantic dining", "river view", "late checkout"],
+    upsell: "Upsell river-view upgrade if open",
   },
 ];
 
@@ -178,6 +248,7 @@ function generateRecommendations(res) {
       confidence: weightedScore(template, res),
       rationale: buildRationale(template, res),
       locality: buildLocality(template, res),
+      dataPoints: buildDataPoints(template, res),
     }))
     .sort((a, b) => b.confidence - a.confidence)
     .slice(0, 3);
@@ -217,6 +288,17 @@ function buildLocality(template, res) {
   return "Provide desk-ready setup + city view if open";
 }
 
+function buildDataPoints(template, res) {
+  const points = [];
+  points.push(`Arrival: ${res.rawData.arrivalWindow} · Checkout: ${res.rawData.checkoutHabit}`);
+  if (res.preferences.pillows) points.push(`Pillow type: ${res.preferences.pillows} (${res.preferences.pillowFirmness})`);
+  points.push(`Towels/blankets/pillows: ${res.preferences.towels}/${res.preferences.blankets}/${res.preferences.pillowCount}`);
+  if (res.rawData.poolInterest !== "low") points.push("Guide to pool + towel desk after check-in");
+  points.push(`Trip: ${res.stayPurpose} — ${res.rawData.tripPurposeDetail}`);
+  points.push(template.upsell);
+  return points.slice(0, 5);
+}
+
 function buildSummary(res) {
   const complaint = res.complaints.length ? `flagged ${res.complaints.join(" & ")}` : "no active complaints";
   const sleep = res.preferences.noise === "quiet" ? "prioritizes quiet rest" : "okay with moderate noise";
@@ -252,6 +334,7 @@ function selectReservation(index, element) {
   const detailBody = document.getElementById("detail-body");
   const recommendations = generateRecommendations(res);
   const profileSummary = buildSummary(res);
+  const analytics = buildPredictiveAnalytics(res);
 
   document.getElementById("selection-pill").textContent = `${res.guest} · ${res.arrival} · ${res.nights} nights`;
 
@@ -300,6 +383,7 @@ function selectReservation(index, element) {
             <p class="metric">${res.complaints.length ? res.complaints.join(", ") : "None"}</p>
           </div>
         </div>
+        <button class="btn btn-ghost data-window-trigger" data-guest="${res.guest}" aria-label="Open data window">View raw data &amp; predictive analytics</button>
       </div>
     </div>
 
@@ -330,29 +414,29 @@ function selectReservation(index, element) {
         </div>
         <p class="muted">Click Accept or Reject to confirm the action for this guest.</p>
       </div>
-      ${recommendations
-        .map(
-          (rec, idx) => `
-            <div class="recommendation">
-              <div class="rec-main">
-                <div class="rec-chip">${idx === 0 ? "Top" : `Alt ${idx}`}</div>
-                <div>
-                  <p><strong>${rec.label}</strong></p>
-                  <p class="muted">${rec.description}</p>
-                  <div class="res-meta" style="margin-top:6px;">${rec.drivers
-                    .map((d) => `<span class="pill subtle">${d}</span>`)
-                    .join("")}</div>
-                  <p class="muted locality">${rec.locality}</p>
+        ${recommendations
+          .map(
+            (rec, idx) => `
+              <div class="recommendation">
+                <div class="rec-main">
+                  <div class="rec-chip">${idx === 0 ? "Top" : `Alt ${idx}`}</div>
+                  <div>
+                    <p><strong>${rec.label}</strong></p>
+                    <p class="muted">${rec.description}</p>
+                    <div class="res-meta" style="margin-top:6px;">${rec.drivers
+                      .map((d) => `<span class="pill subtle">${d}</span>`)
+                      .join("")}</div>
+                    <p class="muted locality">${rec.locality}</p>
+                    <ul class="data-points">${rec.dataPoints.map((p) => `<li>${p}</li>`).join("")}</ul>
+                  </div>
                 </div>
-              </div>
-              <div class="rec-side">
-                <div class="confidence-bar"><div class="confidence-fill ${confidenceClass(rec.confidence)}" style="width:${rec.confidence}%"></div></div>
-                <p class="muted" style="text-align:right; margin-top:6px;">Confidence ${rec.confidence}%</p>
-                <p class="muted" style="text-align:right;">${rec.rationale || "Balanced fit"}</p>
-                <div class="rec-actions">
-                  <button class="btn btn-primary action-button" data-rec="${rec.label}" data-action="${rec.action}" data-outcome="accepted">Accept</button>
-                  <button class="btn btn-ghost action-button" data-rec="${rec.label}" data-action="${rec.action}" data-outcome="rejected">Reject</button>
-                </div>
+                <div class="rec-side">
+                  ${renderConfidenceDonut(rec.confidence)}
+                  <p class="muted" style="text-align:center;">${rec.rationale || "Balanced fit"}</p>
+                  <div class="rec-actions">
+                    <button class="btn btn-primary action-button" data-rec="${rec.label}" data-action="${rec.action}" data-outcome="accepted">Accept</button>
+                    <button class="btn btn-ghost action-button" data-rec="${rec.label}" data-action="${rec.action}" data-outcome="rejected">Reject</button>
+                  </div>
               </div>
             </div>
           `
@@ -364,6 +448,7 @@ function selectReservation(index, element) {
   `;
 
   attachActionHandlers(res);
+  attachDataWindow(res, analytics);
 }
 
 function renderPreferences(preferences) {
@@ -390,6 +475,86 @@ function attachActionHandlers(res) {
       actionLog.classList.toggle("action-log-rejected", outcome === "rejected");
     };
   });
+}
+
+function attachDataWindow(res, analytics) {
+  const trigger = document.querySelector(".data-window-trigger");
+  const windowEl = document.getElementById("data-window");
+  const grid = document.getElementById("data-window-grid");
+  const closeBtn = document.getElementById("data-window-close");
+
+  if (!trigger) return;
+
+  trigger.onclick = () => {
+    grid.innerHTML = `
+      <div class="data-card">
+        <p class="eyebrow">Raw data</p>
+        <h4>${res.guest}</h4>
+        <ul class="data-list">
+          ${renderRawData(res.rawData)}
+        </ul>
+      </div>
+      <div class="data-card">
+        <p class="eyebrow">Predictive analytics</p>
+        <h4>Signals powering recs</h4>
+        <ul class="data-list">
+          ${analytics.map((item) => `<li><strong>${item.label}:</strong> ${item.value}</li>`).join("")}
+        </ul>
+      </div>
+    `;
+
+    windowEl.classList.remove("hidden");
+  };
+
+  closeBtn.onclick = () => windowEl.classList.add("hidden");
+  windowEl.onclick = (e) => {
+    if (e.target === windowEl) windowEl.classList.add("hidden");
+  };
+}
+
+function renderRawData(rawData) {
+  return Object.entries(rawData)
+    .map(([key, value]) => `<li><strong>${formatKey(key)}:</strong> ${value}</li>`)
+    .join("");
+}
+
+function buildPredictiveAnalytics(res) {
+  return [
+    { label: "Arrival vs checkout", value: `${res.rawData.arrivalWindow} arrival · ${res.rawData.checkoutHabit} checkout` },
+    { label: "Trip purpose", value: `${res.stayPurpose} — ${res.rawData.tripPurposeDetail}` },
+    { label: "Sleep kit", value: `${res.preferences.pillows} pillows · ${res.preferences.pillowFirmness} firmness` },
+    { label: "Linen counts", value: `${res.preferences.towels} towels · ${res.preferences.blankets} blankets · ${res.preferences.pillowCount} pillows` },
+    { label: "Amenity guidance", value: `Pool interest ${res.rawData.poolInterest}; suggest pool/computer/coffee direction at check-in` },
+    { label: "Workspace", value: res.rawData.workspaceNeed || res.preferences.desk || "Standard desk" },
+    { label: "Upsell", value: "Room upgrade and paid late checkout surfaced when available" },
+    { label: "Local recs", value: `Food/travel/business tips tailored to ${res.location}` },
+  ];
+}
+
+function formatKey(key) {
+  return key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/-/g, " ")
+    .replace(/_/g, " ")
+    .replace(/^\w/, (c) => c.toUpperCase());
+}
+
+function renderConfidenceDonut(score) {
+  const circumference = 2 * Math.PI * 28;
+  const offset = circumference - (score / 100) * circumference;
+  const tone = confidenceClass(score);
+  return `
+    <div class="confidence-donut ${tone}">
+      <svg width="72" height="72" viewBox="0 0 72 72" aria-label="Confidence ${score}%">
+        <circle class="donut-bg" cx="36" cy="36" r="28" />
+        <circle class="donut-ring" cx="36" cy="36" r="28" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" />
+      </svg>
+      <div class="donut-center">
+        <span class="donut-score">${score}%</span>
+        <span class="donut-label">confidence</span>
+      </div>
+    </div>
+  `;
 }
 
 function confidenceClass(score) {

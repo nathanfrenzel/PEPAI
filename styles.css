@@ -297,6 +297,14 @@ a {
   color: #0f172a;
 }
 
+.data-points {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #0f172a;
+  display: grid;
+  gap: 4px;
+}
+
 .confidence-bar {
   height: 8px;
   background: #e2e8f0;
@@ -319,6 +327,60 @@ a {
 
 .confidence-fill.low {
   background: linear-gradient(90deg, var(--muted), #94a3b8);
+}
+
+.confidence-donut {
+  position: relative;
+  width: 92px;
+  height: 92px;
+  margin: 0 auto 6px;
+  display: grid;
+  place-items: center;
+}
+
+.confidence-donut svg {
+  transform: rotate(-90deg);
+}
+
+.donut-bg {
+  fill: none;
+  stroke: #e2e8f0;
+  stroke-width: 8;
+}
+
+.donut-ring {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke: url(#gradient) var(--accent);
+  stroke: var(--accent);
+}
+
+.confidence-donut.mid .donut-ring {
+  stroke: #f59e0b;
+}
+
+.confidence-donut.low .donut-ring {
+  stroke: #94a3b8;
+}
+
+.donut-center {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.donut-score {
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.donut-label {
+  font-size: 11px;
+  color: var(--muted);
 }
 
 .actions,
@@ -447,6 +509,64 @@ a {
 .action-log-rejected {
   border-color: rgba(239, 68, 68, 0.5) !important;
   background: rgba(239, 68, 68, 0.08) !important;
+}
+
+.data-window {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  display: grid;
+  place-items: center;
+  z-index: 30;
+  padding: 18px;
+}
+
+.data-window.hidden {
+  display: none;
+}
+
+.data-window__sheet {
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.25);
+  padding: 18px;
+  max-width: 960px;
+  width: min(960px, 100%);
+}
+
+.data-window__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.data-window__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.data-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  background: #f8fafc;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.data-card h4 {
+  margin-bottom: 6px;
+}
+
+.data-list {
+  margin: 0;
+  padding-left: 16px;
+  color: #0f172a;
+  display: grid;
+  gap: 6px;
 }
 
 @media (max-width: 1140px) {
