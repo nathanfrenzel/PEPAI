@@ -178,26 +178,26 @@ const reservations = [
 const recommendationTemplates = [
   {
     id: "quiet-corner",
-    label: "Assign quiet corner king · Stack 18",
-    description: "Place guest on a high floor away from elevators; preset foam pillows and note quiet corridor request.",
+    label: "Quiet corner king · stack 18",
+    description: "Assign high-floor corner near quiet corridor; pre-stage foam pillows and note noise sensitivity for housekeeping.",
     action: "Assign quiet stack & prep pillows",
     base: 82,
-    drivers: ["noise: quiet", "foam pillows", "away from elevator"],
-    upsell: "Offer $25/night view premium if facing park",
+    drivers: ["noise: quiet", "foam pillows", "hallway buffer"],
+    upsell: "Offer $25/night park-view premium if available",
   },
   {
     id: "courtyard-gym",
     label: "Courtyard queen near fitness",
-    description: "Select mid-floor room buffered from street noise with easy gym access; stock extra towels in closet.",
+    description: "Place near fitness corridor with courtyard exposure to reduce traffic; stage two extra towel sets and label 6am gym access.",
     action: "Assign mid floor + add towels",
     base: 70,
     drivers: ["gym access", "quiet wing", "extra towels"],
-    upsell: "Add $15 wellness pass with smoothie credit",
+    upsell: "Offer $15 wellness pass with smoothie credit",
   },
   {
     id: "city-work",
     label: "City view work-ready room",
-    description: "Prioritize strong desk setup, near elevators for quick access; deliver extra plush pillows pre-arrival.",
+    description: "Guarantee desk-forward setup and plush pillows; keep near elevators for program access and confirm premium Wi‑Fi readiness.",
     action: "Flag desk setup & pillow refresh",
     base: 76,
     drivers: ["city view", "desk setup", "plush pillows"],
@@ -206,7 +206,7 @@ const recommendationTemplates = [
   {
     id: "suite-lounge",
     label: "Suite + lounge & tea service",
-    description: "Confirm lounge access, drop evening tea kit, and note late checkout flexibility for remote work blocks.",
+    description: "Confirm lounge wristbands, deliver evening tea kit, and flag late-checkout flexibility to protect remote work cadence.",
     action: "Confirm lounge + tea setup",
     base: 80,
     drivers: ["lounge access", "tea service", "late checkout"],
@@ -214,8 +214,8 @@ const recommendationTemplates = [
   },
   {
     id: "romance-dining",
-    label: "Romantic dining + late checkout",
-    description: "Recommend three local restaurants with cozy ambience, hold late checkout, and arrange river view if open.",
+    label: "Curated dining + late checkout",
+    description: "Send three romantic dining holds, protect late checkout, and secure river view if inventory allows; note anniversary context.",
     action: "Send dining picks & note late checkout",
     base: 78,
     drivers: ["romantic dining", "river view", "late checkout"],
@@ -303,7 +303,7 @@ function buildSummary(res) {
   const complaint = res.complaints.length ? `flagged ${res.complaints.join(" & ")}` : "no active complaints";
   const sleep = res.preferences.noise === "quiet" ? "prioritizes quiet rest" : "okay with moderate noise";
   const arrival = res.preferences.arrival ? `${res.preferences.arrival} arrival` : "flexible arrival";
-  return `${res.guest} is a ${res.honorsStatus} Honors guest visiting for ${res.stayPurpose}. They ${sleep} and prefers ${res.preferences.pillows} pillows with a ${res.preferences.view} view. Expect ${arrival}; ${complaint} noted.`;
+  return `${res.guest} is a ${res.honorsStatus} Honors guest traveling for ${res.stayPurpose} (last stay ${res.lastStay}). They ${sleep} and prefer ${res.preferences.pillows} pillows with a ${res.preferences.view} view. Expect ${arrival}; ${complaint} noted for check-in coaching.`;
 }
 
 function renderReservationList() {
@@ -543,11 +543,24 @@ function renderConfidenceDonut(score) {
   const circumference = 2 * Math.PI * 28;
   const offset = circumference - (score / 100) * circumference;
   const tone = confidenceClass(score);
+  const gradientId = `grad-${tone}-${Math.floor(Math.random() * 10000)}`;
+  const [start, end] =
+    tone === "mid"
+      ? ["#f59e0b", "#fb923c"]
+      : tone === "low"
+      ? ["#94a3b8", "#64748b"]
+      : ["#1b4ad8", "#22c55e"];
   return `
     <div class="confidence-donut ${tone}">
-      <svg width="72" height="72" viewBox="0 0 72 72" aria-label="Confidence ${score}%">
+      <svg width="80" height="80" viewBox="0 0 72 72" aria-label="Confidence ${score}%">
+        <defs>
+          <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${start}" />
+            <stop offset="100%" stop-color="${end}" />
+          </linearGradient>
+        </defs>
         <circle class="donut-bg" cx="36" cy="36" r="28" />
-        <circle class="donut-ring" cx="36" cy="36" r="28" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" />
+        <circle class="donut-ring" cx="36" cy="36" r="28" stroke="url(#${gradientId})" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" />
       </svg>
       <div class="donut-center">
         <span class="donut-score">${score}%</span>
