@@ -300,10 +300,11 @@ function buildDataPoints(template, res) {
 }
 
 function buildSummary(res) {
-  const complaint = res.complaints.length ? `flagged ${res.complaints.join(" & ")}` : "no active complaints";
+  const complaint = res.complaints.length ? `Flag ${res.complaints.join(" & ")}` : "No active complaints";
   const sleep = res.preferences.noise === "quiet" ? "prioritizes quiet rest" : "okay with moderate noise";
   const arrival = res.preferences.arrival ? `${res.preferences.arrival} arrival` : "flexible arrival";
-  return `${res.guest} is a ${res.honorsStatus} Honors guest traveling for ${res.stayPurpose} (last stay ${res.lastStay}). They ${sleep} and prefer ${res.preferences.pillows} pillows with a ${res.preferences.view} view. Expect ${arrival}; ${complaint} noted for check-in coaching.`;
+  const pillow = res.preferences.pillowFirmness ? `${res.preferences.pillowFirmness} feel` : res.preferences.pillows;
+  return `${res.guest} is a ${res.honorsStatus} Honors guest traveling for ${res.stayPurpose}. They ${sleep}, favor ${res.preferences.pillows} pillows (${pillow}) with a ${res.preferences.view} view, and expect ${arrival}. ${complaint} noted for check-in coaching.`;
 }
 
 function renderReservationList() {
@@ -333,6 +334,7 @@ function selectReservation(index, element) {
   const res = reservations[index];
   const detailBody = document.getElementById("detail-body");
   const recommendations = generateRecommendations(res);
+  const topPreferences = pickTopPreferences(res.preferences);
   const profileSummary = buildSummary(res);
   const analytics = buildPredictiveAnalytics(res);
 
@@ -340,12 +342,12 @@ function selectReservation(index, element) {
 
   detailBody.innerHTML = `
     <div class="summary-grid">
-      <div class="card summary">
-        <div class="summary-top">
-          <div>
-            <p class="eyebrow">AI-generated profile</p>
-            <h3>${res.guest}</h3>
-            <p class="summary-copy">${profileSummary}</p>
+        <div class="card summary">
+          <div class="summary-top">
+            <div>
+              <p class="eyebrow">AI-generated profile</p>
+              <h3>${res.guest}</h3>
+              <p class="summary-copy">${profileSummary}</p>
           </div>
           <div class="summary-badges">
             <span class="pill">${res.honorsStatus} Honors</span>
@@ -354,10 +356,10 @@ function selectReservation(index, element) {
           </div>
         </div>
       </div>
-      <div class="card metrics">
-        <div class="metric-row">
-          <div>
-            <p class="muted">Arrival</p>
+        <div class="card metrics">
+          <div class="metric-row">
+            <div>
+              <p class="muted">Arrival</p>
             <p class="metric">${res.arrival}</p>
           </div>
           <div>
@@ -383,17 +385,24 @@ function selectReservation(index, element) {
             <p class="metric">${res.complaints.length ? res.complaints.join(", ") : "None"}</p>
           </div>
         </div>
-        <button class="btn btn-ghost data-window-trigger" data-guest="${res.guest}" aria-label="Open data window">View raw data &amp; predictive analytics</button>
+        <button class="btn btn-primary data-window-trigger" data-guest="${res.guest}" aria-label="Open data window">Raw data &amp; analytics</button>
       </div>
     </div>
 
     <div class="detail-grid">
       <div class="card">
         <h3>Raw preferences</h3>
+        <p class="muted">AI-selected top four signals</p>
         <div class="key-points">
-          ${renderPreferences(res.preferences)}
+          ${renderPreferences(topPreferences)}
           <div class="key-point"><span class="dot"></span><div><strong>Behaviors</strong>${res.behaviors.join(", ")}</div></div>
         </div>
+      </div>
+
+      <div class="card">
+        <h3>Raw data snapshot</h3>
+        <p class="muted">Operational signals driving today’s fit</p>
+        <ul class="data-points compact">${renderRawPreview(res.rawData)}</ul>
       </div>
 
       <div class="card">
@@ -452,7 +461,7 @@ function selectReservation(index, element) {
 }
 
 function renderPreferences(preferences) {
-  return Object.entries(preferences)
+  return preferences
     .map(
       ([key, value]) => `
         <div class="key-point">
@@ -460,6 +469,37 @@ function renderPreferences(preferences) {
           <div><strong>${key}</strong>${value}</div>
         </div>`
     )
+    .join("");
+}
+
+function pickTopPreferences(preferences) {
+  const priority = [
+    "noise",
+    "pillows",
+    "pillowFirmness",
+    "view",
+    "arrival",
+    "towels",
+    "blankets",
+    "pillowCount",
+    "desk",
+    "dining",
+    "amenity",
+  ];
+
+  const ordered = priority
+    .filter((key) => preferences[key] !== undefined)
+    .map((key) => [key, preferences[key]]);
+
+  const remaining = Object.entries(preferences).filter(([key]) => !priority.includes(key));
+  return [...ordered, ...remaining].slice(0, 4);
+}
+
+function renderRawPreview(rawData) {
+  const previewKeys = ["arrivalWindow", "checkoutHabit", "tripPurposeDetail", "workspaceNeed", "poolInterest"];
+  return previewKeys
+    .filter((key) => rawData[key])
+    .map((key) => `<li><strong>${formatKey(key)}:</strong> ${rawData[key]}</li>`)
     .join("");
 }
 

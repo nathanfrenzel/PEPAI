@@ -1,15 +1,14 @@
 :root {
-  --bg: #0e1b36;
-  --bg-2: #122344;
+  --bg: #f5f7fb;
   --panel: #ffffff;
-  --panel-2: #f0f4ff;
-  --accent: #1b4ad8;
-  --accent-2: #1ec38b;
+  --panel-2: #f2f5fb;
+  --accent: #1b67f1;
+  --accent-2: #0d4eb4;
   --accent-3: #f59e0b;
   --text: #0f172a;
-  --muted: #54607b;
-  --border: #d7dded;
-  --badge: #e5ebfb;
+  --muted: #5b6478;
+  --border: #d8deea;
+  --badge: #e9effb;
   --danger: #ef4444;
 }
 
@@ -20,13 +19,10 @@
 body {
   margin: 0;
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  background:
-    radial-gradient(40% 30% at 10% 10%, rgba(34, 197, 94, 0.16), transparent),
-    radial-gradient(42% 36% at 88% 12%, rgba(37, 99, 235, 0.24), transparent),
-    linear-gradient(180deg, #112346 0%, #0c162b 40%, #0c162b 100%);
+  background: var(--bg);
   color: var(--text);
   min-height: 100vh;
-  padding: 28px 32px 40px;
+  padding: 26px 32px 36px;
 }
 
 h1,
@@ -37,10 +33,6 @@ h5,
 h6 {
   color: #0f172a;
   margin: 0;
-}
-
-.app-header h1 {
-  color: #fff;
 }
 
 p {
@@ -57,71 +49,70 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 24px;
-  padding: 16px 18px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 18px;
-  background: linear-gradient(120deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04));
-  backdrop-filter: blur(6px);
-  color: #fff;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
 }
 
 .brand-stack {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
 .pep-mark {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: linear-gradient(145deg, #1b4ad8, #0f2e74);
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #1b67f1, #0f3e97);
   display: grid;
   place-items: center;
   color: #fff;
   font-weight: 800;
   letter-spacing: 0.06em;
-  box-shadow: 0 12px 30px rgba(12, 36, 90, 0.35);
+  box-shadow: 0 10px 24px rgba(16, 57, 136, 0.26);
 }
 
-.header-meta {
+.header-actions {
   display: flex;
-  gap: 8px;
   align-items: center;
+  gap: 10px;
 }
 
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.75);
-  margin-bottom: 6px;
+  color: var(--muted);
+  margin-bottom: 4px;
 }
 
 .layout {
   display: grid;
   grid-template-columns: 360px 1fr;
-  gap: 18px;
+  gap: 16px;
   align-items: start;
 }
 
 .panel {
-  background: linear-gradient(180deg, #ffffff, #f7f9ff);
+  background: #ffffff;
   border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 15px 40px rgba(11, 21, 45, 0.2);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(16, 33, 80, 0.08);
   overflow: hidden;
 }
 
 .panel-header {
-  padding: 16px 18px 12px;
+  padding: 14px 16px 10px;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(27, 74, 216, 0.07), transparent);
+  background: #f8fafd;
 }
 
 .panel-header h2 {
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .muted {
@@ -147,13 +138,13 @@ a {
 }
 
 .reservation-item:hover {
-  background: rgba(37, 99, 235, 0.08);
-  border-color: rgba(37, 99, 235, 0.4);
+  background: #f4f7fd;
+  border-color: rgba(27, 103, 241, 0.35);
 }
 
 .reservation-item.active {
-  background: rgba(37, 99, 235, 0.12);
-  border-color: rgba(37, 99, 235, 0.6);
+  background: #e9effb;
+  border-color: rgba(27, 103, 241, 0.7);
 }
 
 .res-meta {
@@ -169,9 +160,9 @@ a {
   padding: 3px 8px;
   font-weight: 600;
   font-size: 12px;
-  border: 1px solid rgba(37, 99, 235, 0.5);
-  color: #1d4ed8;
-  background: rgba(37, 99, 235, 0.12);
+  border: 1px solid rgba(27, 103, 241, 0.45);
+  color: #0f4bb3;
+  background: rgba(27, 103, 241, 0.1);
 }
 
 .stay-score {
@@ -224,9 +215,9 @@ a {
   gap: 8px;
   border-radius: 999px;
   padding: 6px 12px;
-  background: rgba(37, 99, 235, 0.1);
-  color: #1d4ed8;
-  border: 1px solid rgba(37, 99, 235, 0.2);
+  background: #eef3fd;
+  color: #0f4bb3;
+  border: 1px solid rgba(27, 103, 241, 0.25);
   font-size: 14px;
 }
 
@@ -256,8 +247,8 @@ a {
   padding: 12px;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, #ffffff, #f3f6ff);
-  box-shadow: 0 10px 28px rgba(12, 20, 46, 0.12);
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(12, 20, 46, 0.08);
 }
 
 .recommendations-header {
@@ -304,6 +295,11 @@ a {
   gap: 4px;
 }
 
+.data-points.compact {
+  margin-top: 4px;
+  gap: 2px;
+}
+
 .confidence-bar {
   height: 8px;
   background: #e2e8f0;
@@ -335,10 +331,10 @@ a {
   margin: 0 auto 6px;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 50% 45%, rgba(27, 74, 216, 0.08), transparent 60%), #f8fafc;
+  background: #f7f9fd;
   border-radius: 50%;
   border: 1px solid var(--border);
-  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
 }
 
 .confidence-donut svg {
@@ -347,7 +343,7 @@ a {
 
 .donut-bg {
   fill: none;
-  stroke: #e2e8f0;
+  stroke: #e5e9f2;
   stroke-width: 8;
 }
 
@@ -357,7 +353,7 @@ a {
   stroke-width: 8;
   stroke-linecap: round;
   stroke-dasharray: 175.84;
-  filter: drop-shadow(0 2px 4px rgba(27, 74, 216, 0.12));
+  filter: drop-shadow(0 2px 4px rgba(27, 103, 241, 0.12));
 }
 
 .confidence-donut.mid .donut-ring {
@@ -414,8 +410,8 @@ a {
 }
 
 .btn-primary {
-  background: linear-gradient(90deg, #2563eb, #22c55e);
-  border-color: rgba(37, 99, 235, 0.6);
+  background: linear-gradient(90deg, #1b67f1, #0d4eb4);
+  border-color: rgba(27, 103, 241, 0.6);
   color: #ffffff;
 }
 
