@@ -2,8 +2,8 @@
   --bg: #f5f7fb;
   --panel: #ffffff;
   --panel-2: #f2f5fb;
-  --accent: #1b67f1;
-  --accent-2: #0d4eb4;
+  --accent: #2c7edb;
+  --accent-2: #1c65b9;
   --accent-3: #f59e0b;
   --text: #0f172a;
   --muted: #5b6478;
@@ -67,7 +67,7 @@ a {
   width: 46px;
   height: 46px;
   border-radius: 10px;
-  background: linear-gradient(145deg, #1b67f1, #0f3e97);
+  background: linear-gradient(145deg, #2c7edb, #1c65b9);
   display: grid;
   place-items: center;
   color: #fff;
@@ -404,15 +404,16 @@ a {
 }
 
 .btn:hover {
-  border-color: rgba(37, 99, 235, 0.6);
+  border-color: rgba(44, 126, 219, 0.7);
   transform: translateY(-1px);
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.15);
+  box-shadow: 0 8px 20px rgba(44, 126, 219, 0.18);
 }
 
 .btn-primary {
-  background: linear-gradient(90deg, #1b67f1, #0d4eb4);
-  border-color: rgba(27, 103, 241, 0.6);
+  background: var(--accent);
+  border-color: rgba(44, 126, 219, 0.85);
   color: #ffffff;
+  box-shadow: 0 10px 22px rgba(44, 126, 219, 0.22);
 }
 
 .btn-ghost {

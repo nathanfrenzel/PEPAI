@@ -175,128 +175,119 @@ const reservations = [
   },
 ];
 
-const recommendationTemplates = [
-  {
-    id: "quiet-corner",
-    label: "Quiet corner king · stack 18",
-    description: "Assign high-floor corner near quiet corridor; pre-stage foam pillows and note noise sensitivity for housekeeping.",
-    action: "Assign quiet stack & prep pillows",
-    base: 82,
-    drivers: ["noise: quiet", "foam pillows", "hallway buffer"],
-    upsell: "Offer $25/night park-view premium if available",
-  },
-  {
-    id: "courtyard-gym",
-    label: "Courtyard queen near fitness",
-    description: "Place near fitness corridor with courtyard exposure to reduce traffic; stage two extra towel sets and label 6am gym access.",
-    action: "Assign mid floor + add towels",
-    base: 70,
-    drivers: ["gym access", "quiet wing", "extra towels"],
-    upsell: "Offer $15 wellness pass with smoothie credit",
-  },
-  {
-    id: "city-work",
-    label: "City view work-ready room",
-    description: "Guarantee desk-forward setup and plush pillows; keep near elevators for program access and confirm premium Wi‑Fi readiness.",
-    action: "Flag desk setup & pillow refresh",
-    base: 76,
-    drivers: ["city view", "desk setup", "plush pillows"],
-    upsell: "Offer premium Wi‑Fi or day-pass workspace",
-  },
-  {
-    id: "suite-lounge",
-    label: "Suite + lounge & tea service",
-    description: "Confirm lounge wristbands, deliver evening tea kit, and flag late-checkout flexibility to protect remote work cadence.",
-    action: "Confirm lounge + tea setup",
-    base: 80,
-    drivers: ["lounge access", "tea service", "late checkout"],
-    upsell: "Offer paid late checkout to 2pm",
-  },
-  {
-    id: "romance-dining",
-    label: "Curated dining + late checkout",
-    description: "Send three romantic dining holds, protect late checkout, and secure river view if inventory allows; note anniversary context.",
-    action: "Send dining picks & note late checkout",
-    base: 78,
-    drivers: ["romantic dining", "river view", "late checkout"],
-    upsell: "Upsell river-view upgrade if open",
-  },
-];
-
-function weightedScore(template, res) {
-  let score = template.base;
-
-  if (template.id === "quiet-corner" && res.preferences.noise === "quiet") score += 10;
-  if (template.id === "courtyard-gym" && res.preferences.view === "courtyard") score += 8;
-  if (template.id === "city-work" && res.preferences.view === "city") score += 8;
-  if (template.id === "suite-lounge" && res.roomType === "Suite") score += 6;
-  if (template.id === "romance-dining" && res.preferences.view === "river") score += 5;
-  if (res.complaints.includes("hallway noise") && template.id === "quiet-corner") score += 5;
-  if (res.complaints.includes("flat pillows") && template.drivers.some((d) => d.includes("pillows"))) score += 5;
-  if (res.behaviors.includes("remote work") && template.id === "suite-lounge") score += 4;
-  if (res.behaviors.includes("uses gym") && template.id === "courtyard-gym") score += 4;
-  if (res.behaviors.includes("requests dining recs") && template.id === "romance-dining") score += 5;
-
-  score += Math.round(Math.random() * 6 - 3);
-  return Math.max(55, Math.min(score, 98));
-}
-
 function generateRecommendations(res) {
-  return recommendationTemplates
-    .map((template) => ({
-      ...template,
-      confidence: weightedScore(template, res),
-      rationale: buildRationale(template, res),
-      locality: buildLocality(template, res),
-      dataPoints: buildDataPoints(template, res),
-    }))
-    .sort((a, b) => b.confidence - a.confidence)
-    .slice(0, 3);
+  const rooming = buildRoomingRecommendation(res);
+  const service = buildServiceRecommendation(res);
+  const local = buildLocalRecommendation(res);
+
+  return [rooming, service, local].sort((a, b) => b.confidence - a.confidence);
 }
 
-function buildRationale(template, res) {
-  const factors = [];
-  if (res.preferences.noise === "quiet" && template.drivers.some((d) => d.includes("quiet"))) {
-    factors.push("Protects against past noise complaint");
-  }
-  if (res.preferences.view && template.label.toLowerCase().includes(res.preferences.view)) {
-    factors.push(`Honors ${res.preferences.view} view request`);
-  }
-  if (res.complaints.length) {
-    factors.push(`Considers last complaint: ${res.complaints[0]}`);
-  }
-  if (res.behaviors.includes("digital key")) {
-    factors.push("Digital key ready");
-  }
-  if (!factors.length) factors.push("Balanced inventory & preference fit");
-  return factors.slice(0, 3).join(" · ");
+function computeConfidence(base, adjustments = []) {
+  let score = base;
+  adjustments.forEach((value) => {
+    score += value;
+  });
+  return Math.max(55, Math.min(Math.round(score), 98));
 }
 
-function buildLocality(template, res) {
-  if (template.id === "romance-dining") {
-    return "Recommend: Pearl & Pine Bistro, Scout Rooftop, Riverlight Tavern";
-  }
-  if (template.id === "courtyard-gym") {
-    return "Add 2 extra towel sets + 6am gym readiness";
-  }
-  if (template.id === "quiet-corner") {
-    return "Prep foam pillows + quiet corridor note";
-  }
-  if (template.id === "suite-lounge") {
-    return "Deliver tea kit at 7pm + confirm lounge wristbands";
-  }
-  return "Provide desk-ready setup + city view if open";
+function buildRoomingRecommendation(res) {
+  const quietBonus = res.preferences.noise === "quiet" ? 8 : 2;
+  const complaintBonus = res.complaints.length ? 6 : 0;
+  const arrivalBonus = res.preferences.arrival === "early" ? 4 : res.preferences.arrival === "late" ? 2 : 0;
+
+  const confidence = computeConfidence(78, [quietBonus, complaintBonus, arrivalBonus]);
+
+  return {
+    id: "rooming",
+    label: `${capitalize(res.preferences.view || "Preferred")} view ${res.roomType.toLowerCase()} on quiet stack`,
+    description: `Place ${res.guest} near ${res.preferences.view || "balanced"} exposure, pre-stage ${res.preferences.pillows} pillows (${res.preferences.pillowFirmness}), and buffer for ${res.preferences.noise} corridors to avoid repeat issues.`,
+    action: "Assign room & prep linens",
+    drivers: [
+      `${res.preferences.noise} noise`,
+      `${res.preferences.pillows} pillows`,
+      `${res.preferences.view || "balanced"} view`,
+    ],
+    locality: `Towels/blankets/pillows: ${res.preferences.towels}/${res.preferences.blankets}/${res.preferences.pillowCount}`,
+    dataPoints: [
+      `Arrival ${res.rawData.arrivalWindow}; checkout ${res.rawData.checkoutHabit}`,
+      `Complaints: ${res.complaints.join(" · ") || "none"}`,
+      `Prep for ${res.behaviors.slice(0, 2).join(" & ") || "standard"}`,
+      `Desk need: ${res.rawData.workspaceNeed || res.preferences.desk || "standard"}`,
+      res.rawData.poolInterest !== "low" ? "Point to pool + towel desk after check-in" : "Offer coffee/tea station direction",
+    ],
+    rationale: `Protects against ${res.complaints[0] || "noise drift"} while honoring view + pillow setup and ${res.preferences.arrival || "flex"} arrival timing.`,
+    confidence,
+  };
 }
 
-function buildDataPoints(template, res) {
-  const points = [];
-  points.push(`Arrival: ${res.rawData.arrivalWindow} · Checkout: ${res.rawData.checkoutHabit}`);
-  if (res.preferences.pillows) points.push(`Pillow type: ${res.preferences.pillows} (${res.preferences.pillowFirmness})`);
-  points.push(`Towels/blankets/pillows: ${res.preferences.towels}/${res.preferences.blankets}/${res.preferences.pillowCount}`);
-  if (res.rawData.poolInterest !== "low") points.push("Guide to pool + towel desk after check-in");
-  points.push(`Trip: ${res.stayPurpose} — ${res.rawData.tripPurposeDetail}`);
-  points.push(template.upsell);
-  return points.slice(0, 5);
+function buildServiceRecommendation(res) {
+  const earlyArrival = res.preferences.arrival === "early" ? 6 : 0;
+  const upsellBonus = res.roomType === "Suite" ? 4 : 2;
+  const complaintPenalty = res.complaints.length ? -2 : 0;
+  const confidence = computeConfidence(74, [earlyArrival, upsellBonus, complaintPenalty]);
+
+  return {
+    id: "service",
+    label: "Arrival flow + amenity guidance",
+    description: `Fast-track check-in, confirm ${res.rawData.checkoutHabit} checkout habit, and script a handoff that points them to pool, business center, and coffee/tea without slowing the queue.`,
+    action: "Coach arrival & stage service touches",
+    drivers: [
+      `${res.preferences.arrival || "flex"} arrival`,
+      `${res.rawData.checkoutHabit} checkout`,
+      res.rawData.poolInterest !== "low" ? "pool interest" : "coffee/tea",
+    ],
+    locality: `Trip purpose: ${res.stayPurpose.toLowerCase()}; remind of ${res.rawData.tripPurposeDetail.toLowerCase()}`,
+    dataPoints: [
+      `Arrival window ${res.rawData.arrivalWindow}; prepare mobile key if requested`,
+      `Workspace: ${res.rawData.workspaceNeed || res.preferences.desk || "standard"}`,
+      `Amenities: point to pool/computer/coffee on map`,
+      res.preferences.dietary ? `Dietary: ${res.preferences.dietary}` : `Transport: ${res.rawData.transport}`,
+      `Offer paid late checkout if ${res.rawData.checkoutHabit === "late" ? "pattern continues" : "needed"}`,
+    ],
+    rationale: `Aligns check-in cadence with ${res.rawData.arrivalWindow} arrival and ${res.rawData.checkoutHabit} checkout while keeping amenities in the script.`,
+    confidence,
+  };
+}
+
+function buildLocalRecommendation(res) {
+  const loyaltyBonus = res.honorsStatus === "Diamond" ? 6 : res.honorsStatus === "Gold" ? 4 : 2;
+  const purposeBonus = res.stayPurpose.toLowerCase().includes("leisure") ? 5 : 3;
+  const confidence = computeConfidence(76, [loyaltyBonus, purposeBonus]);
+
+  return {
+    id: "local",
+    label: `Personalized recs for ${res.location}`,
+    description: `Share three local picks plus one upgrade hook matched to ${res.stayPurpose.toLowerCase()}. Pair with a tailored upsell that fits their habits.`,
+    action: "Send recs + surface upsell",
+    drivers: [
+      `${res.stayPurpose.toLowerCase()}`,
+      `${res.rawData.transport} arrival`,
+      `${res.honorsStatus} status`,
+    ],
+    locality: buildLocalList(res.location),
+    dataPoints: [
+      `Purpose detail: ${res.rawData.tripPurposeDetail}`,
+      `Food/coffee: ${res.rawData.coffee || res.rawData.beverage || "standard"}`,
+      `Transport: ${res.rawData.transport}`,
+      `Upsell: upgrade room type or late checkout if open`,
+      `Reference past stay (${res.lastStay}) for continuity`,
+    ],
+    rationale: `Pairs ${res.location} recommendations with ${res.stayPurpose.toLowerCase()} context and ${res.honorsStatus} perks.`,
+    confidence,
+  };
+}
+
+function buildLocalList(location) {
+  const city = location.split(",")[0].trim();
+  const recs = {
+    Austin: "Try Moonlight Brunch, Rainey Street tacos, Lady Bird Lake walk",
+    Boston: "Recommend Seaport cafes, North End pasta, Charles River run",
+    "New York": "Point to Bryant Park stroll, Midtown ramen, High Line sunset",
+    "San Francisco": "Share Embarcadero walk, Chinatown dim sum, Ferry Building coffee",
+    Chicago: "Suggest Riverwalk, West Loop bites, Millennium Park jog",
+  };
+  return recs[city] || "Curate nearby coffee, dinner, and transit-friendly options";
 }
 
 function buildSummary(res) {
@@ -403,13 +394,6 @@ function selectReservation(index, element) {
         <h3>Raw data snapshot</h3>
         <p class="muted">Operational signals driving today’s fit</p>
         <ul class="data-points compact">${renderRawPreview(res.rawData)}</ul>
-      </div>
-
-      <div class="card">
-        <h3>Risk &amp; guardrails</h3>
-        <div class="pill pill-quiet">Human confirms final room</div>
-        <div class="pill pill-risk">Flag if confidence < 70%</div>
-        <p class="muted">Model suggests options with evidence; front desk team approves or rejects each recommendation.</p>
       </div>
     </div>
 
@@ -579,6 +563,11 @@ function formatKey(key) {
     .replace(/^\w/, (c) => c.toUpperCase());
 }
 
+function capitalize(value) {
+  if (!value) return "";
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 function renderConfidenceDonut(score) {
   const circumference = 2 * Math.PI * 28;
   const offset = circumference - (score / 100) * circumference;
@@ -589,7 +578,7 @@ function renderConfidenceDonut(score) {
       ? ["#f59e0b", "#fb923c"]
       : tone === "low"
       ? ["#94a3b8", "#64748b"]
-      : ["#1b4ad8", "#22c55e"];
+      : ["#2c7edb", "#1c65b9"];
   return `
     <div class="confidence-donut ${tone}">
       <svg width="80" height="80" viewBox="0 0 72 72" aria-label="Confidence ${score}%">
