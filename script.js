@@ -200,23 +200,21 @@ function buildRoomingRecommendation(res) {
 
   return {
     id: "rooming",
-    label: `${capitalize(res.preferences.view || "Preferred")} view ${res.roomType.toLowerCase()} on quiet stack`,
-    description: `Place ${res.guest} near ${res.preferences.view || "balanced"} exposure, pre-stage ${res.preferences.pillows} pillows (${res.preferences.pillowFirmness}), and buffer for ${res.preferences.noise} corridors to avoid repeat issues.`,
-    action: "Assign room & prep linens",
+    label: `${capitalize(res.preferences.view || "Preferred")} view ${res.roomType.toLowerCase()} · quiet side`,
+    description: `Seat them on a quieter stack, stage ${res.preferences.pillows} pillows (${res.preferences.pillowFirmness}) and linens before arrival, and double-check ${res.preferences.view || "balanced"} exposure.`,
+    action: "Assign room & stage linens",
     drivers: [
       `${res.preferences.noise} noise`,
       `${res.preferences.pillows} pillows`,
       `${res.preferences.view || "balanced"} view`,
     ],
-    locality: `Towels/blankets/pillows: ${res.preferences.towels}/${res.preferences.blankets}/${res.preferences.pillowCount}`,
+    locality: `Linen counts: ${res.preferences.towels} towels · ${res.preferences.blankets} blankets · ${res.preferences.pillowCount} pillows`,
     dataPoints: [
       `Arrival ${res.rawData.arrivalWindow}; checkout ${res.rawData.checkoutHabit}`,
-      `Complaints: ${res.complaints.join(" · ") || "none"}`,
-      `Prep for ${res.behaviors.slice(0, 2).join(" & ") || "standard"}`,
-      `Desk need: ${res.rawData.workspaceNeed || res.preferences.desk || "standard"}`,
-      res.rawData.poolInterest !== "low" ? "Point to pool + towel desk after check-in" : "Offer coffee/tea station direction",
+      `Complaints to avoid: ${res.complaints.join(" & ") || "none flagged"}`,
+      `Prefers ${res.preferences.noise} hallways and ${res.preferences.pillows} pillows (${res.preferences.pillowFirmness})`,
     ],
-    rationale: `Protects against ${res.complaints[0] || "noise drift"} while honoring view + pillow setup and ${res.preferences.arrival || "flex"} arrival timing.`,
+    rationale: `Addresses ${res.preferences.noise} preference and ${res.complaints[0] || "prior noise"} history while matching the requested view and linens before they arrive.`,
     confidence,
   };
 }
@@ -229,23 +227,21 @@ function buildServiceRecommendation(res) {
 
   return {
     id: "service",
-    label: "Arrival flow + amenity guidance",
-    description: `Fast-track check-in, confirm ${res.rawData.checkoutHabit} checkout habit, and script a handoff that points them to pool, business center, and coffee/tea without slowing the queue.`,
-    action: "Coach arrival & stage service touches",
+    label: "Check-in cadence + amenity script",
+    description: `Shape the welcome to match arrival ${res.rawData.arrivalWindow}, confirm checkout habit, and walk them to the pool/business center/coffee map without slowing the line.`,
+    action: "Guide arrival & confirm timing",
     drivers: [
       `${res.preferences.arrival || "flex"} arrival`,
       `${res.rawData.checkoutHabit} checkout`,
-      res.rawData.poolInterest !== "low" ? "pool interest" : "coffee/tea",
+      res.rawData.poolInterest !== "low" ? "pool interest" : "coffee/tea direction",
     ],
-    locality: `Trip purpose: ${res.stayPurpose.toLowerCase()}; remind of ${res.rawData.tripPurposeDetail.toLowerCase()}`,
+    locality: `Trip purpose: ${res.stayPurpose.toLowerCase()} — ${res.rawData.tripPurposeDetail}`,
     dataPoints: [
-      `Arrival window ${res.rawData.arrivalWindow}; prepare mobile key if requested`,
-      `Workspace: ${res.rawData.workspaceNeed || res.preferences.desk || "standard"}`,
-      `Amenities: point to pool/computer/coffee on map`,
-      res.preferences.dietary ? `Dietary: ${res.preferences.dietary}` : `Transport: ${res.rawData.transport}`,
-      `Offer paid late checkout if ${res.rawData.checkoutHabit === "late" ? "pattern continues" : "needed"}`,
+      `Prep mobile key; align with ${res.rawData.arrivalWindow} arrival`,
+      `Point to pool/computer/coffee on property map`,
+      res.rawData.workspaceNeed ? `Desk need: ${res.rawData.workspaceNeed}` : "Standard desk is fine",
     ],
-    rationale: `Aligns check-in cadence with ${res.rawData.arrivalWindow} arrival and ${res.rawData.checkoutHabit} checkout while keeping amenities in the script.`,
+    rationale: `Keeps check-in tight for a ${res.rawData.checkoutHabit} checkout guest while giving the amenity pointers they expect from a ${res.stayPurpose.toLowerCase()} stay.`,
     confidence,
   };
 }
@@ -257,9 +253,9 @@ function buildLocalRecommendation(res) {
 
   return {
     id: "local",
-    label: `Personalized recs for ${res.location}`,
-    description: `Share three local picks plus one upgrade hook matched to ${res.stayPurpose.toLowerCase()}. Pair with a tailored upsell that fits their habits.`,
-    action: "Send recs + surface upsell",
+    label: `Local trio + optional upgrade (${res.location})`,
+    description: `Share three nearby picks tied to ${res.stayPurpose.toLowerCase()} and their transport, with a light upsell if inventory allows.`,
+    action: "Send local recs & offer upsell",
     drivers: [
       `${res.stayPurpose.toLowerCase()}`,
       `${res.rawData.transport} arrival`,
@@ -268,12 +264,10 @@ function buildLocalRecommendation(res) {
     locality: buildLocalList(res.location),
     dataPoints: [
       `Purpose detail: ${res.rawData.tripPurposeDetail}`,
-      `Food/coffee: ${res.rawData.coffee || res.rawData.beverage || "standard"}`,
-      `Transport: ${res.rawData.transport}`,
-      `Upsell: upgrade room type or late checkout if open`,
-      `Reference past stay (${res.lastStay}) for continuity`,
+      `Favorite sip: ${res.rawData.coffee || res.rawData.beverage || "standard"}`,
+      `Transit: ${res.rawData.transport}; pace recs for that mode`,
     ],
-    rationale: `Pairs ${res.location} recommendations with ${res.stayPurpose.toLowerCase()} context and ${res.honorsStatus} perks.`,
+    rationale: `Balances ${res.location} dining/outing picks with ${res.stayPurpose.toLowerCase()} context and ${res.honorsStatus} perks; upsell only if it fits the trip.`,
     confidence,
   };
 }
@@ -411,26 +405,35 @@ function selectReservation(index, element) {
           .map(
             (rec, idx) => `
               <div class="recommendation">
-                <div class="rec-main">
-                  <div class="rec-chip">${idx === 0 ? "Top" : `Alt ${idx}`}</div>
-                  <div>
-                    <p><strong>${rec.label}</strong></p>
-                    <p class="muted">${rec.description}</p>
-                    <div class="res-meta" style="margin-top:6px;">${rec.drivers
-                      .map((d) => `<span class="pill subtle">${d}</span>`)
-                      .join("")}</div>
-                    <p class="muted locality">${rec.locality}</p>
-                    <ul class="data-points">${rec.dataPoints.map((p) => `<li>${p}</li>`).join("")}</ul>
+                <div class="rec-top">
+                  <div class="rec-main">
+                    <div class="rec-chip">${idx === 0 ? "Primary" : `Alternate ${idx}`}</div>
+                    <div>
+                      <p class="rec-title">${rec.label}</p>
+                      <p class="muted">${rec.description}</p>
+                      <div class="res-meta" style="margin-top:6px;">${rec.drivers
+                        .map((d) => `<span class="pill subtle">${d}</span>`)
+                        .join("")}</div>
+                      <p class="muted locality">${rec.locality}</p>
+                    </div>
+                  </div>
+                  ${renderConfidenceStack(rec.confidence)}
+                </div>
+                <div class="rec-body">
+                  <div class="rec-column">
+                    <p class="eyebrow">Action</p>
+                    <p class="rec-note"><strong>${rec.action}</strong></p>
+                    <p class="muted">${rec.rationale || "Balanced fit"}</p>
+                  </div>
+                  <div class="rec-column">
+                    <p class="eyebrow">Key signals</p>
+                    <ul class="data-points compact">${rec.dataPoints.map((p) => `<li>${p}</li>`).join("")}</ul>
                   </div>
                 </div>
-                <div class="rec-side">
-                  ${renderConfidenceDonut(rec.confidence)}
-                  <p class="muted" style="text-align:center;">${rec.rationale || "Balanced fit"}</p>
-                  <div class="rec-actions">
-                    <button class="btn btn-primary action-button" data-rec="${rec.label}" data-action="${rec.action}" data-outcome="accepted">Accept</button>
-                    <button class="btn btn-ghost action-button" data-rec="${rec.label}" data-action="${rec.action}" data-outcome="rejected">Reject</button>
-                  </div>
-              </div>
+                <div class="rec-actions">
+                  <button class="btn btn-primary action-button" data-rec="${rec.label}" data-action="${rec.action}" data-outcome="accepted">Accept</button>
+                  <button class="btn btn-ghost action-button" data-rec="${rec.label}" data-action="${rec.action}" data-outcome="rejected">Reject</button>
+                </div>
             </div>
           `
         )
@@ -568,32 +571,13 @@ function capitalize(value) {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
-function renderConfidenceDonut(score) {
-  const circumference = 2 * Math.PI * 28;
-  const offset = circumference - (score / 100) * circumference;
+function renderConfidenceStack(score) {
   const tone = confidenceClass(score);
-  const gradientId = `grad-${tone}-${Math.floor(Math.random() * 10000)}`;
-  const [start, end] =
-    tone === "mid"
-      ? ["#f59e0b", "#fb923c"]
-      : tone === "low"
-      ? ["#94a3b8", "#64748b"]
-      : ["#2c7edb", "#1c65b9"];
   return `
-    <div class="confidence-donut ${tone}">
-      <svg width="80" height="80" viewBox="0 0 72 72" aria-label="Confidence ${score}%">
-        <defs>
-          <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="${start}" />
-            <stop offset="100%" stop-color="${end}" />
-          </linearGradient>
-        </defs>
-        <circle class="donut-bg" cx="36" cy="36" r="28" />
-        <circle class="donut-ring" cx="36" cy="36" r="28" stroke="url(#${gradientId})" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" />
-      </svg>
-      <div class="donut-center">
-        <span class="donut-score">${score}%</span>
-        <span class="donut-label">confidence</span>
+    <div class="confidence-stack">
+      <div class="confidence-chip">${score}% fit</div>
+      <div class="confidence-bar" aria-label="Confidence ${score}%">
+        <div class="confidence-fill ${tone}" style="width:${score}%"></div>
       </div>
     </div>
   `;
