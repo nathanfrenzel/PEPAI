@@ -18,7 +18,6 @@ const reservations = [
       arrival: "late",
       dietary: "vegetarian",
       hobbies: "live music, pool time",
-      pillowFirmness: "medium",
       towels: 3,
       blankets: 1,
       pillowCount: 2,
@@ -53,7 +52,6 @@ const reservations = [
       arrival: "early",
       desk: "needs ergonomic chair",
       dietary: "no shellfish",
-      pillowFirmness: "soft",
       towels: 4,
       blankets: 2,
       pillowCount: 4,
@@ -87,7 +85,6 @@ const reservations = [
       view: "courtyard",
       arrival: "evening",
       fitness: "6am gym session",
-      pillowFirmness: "medium-firm",
       towels: 5,
       blankets: 1,
       pillowCount: 3,
@@ -122,7 +119,6 @@ const reservations = [
       arrival: "late",
       desk: "standing desk requested",
       beverage: "evening tea service",
-      pillowFirmness: "soft",
       towels: 3,
       blankets: 1,
       pillowCount: 4,
@@ -157,7 +153,6 @@ const reservations = [
       arrival: "afternoon",
       dining: "romantic dinner",
       amenity: "late checkout",
-      pillowFirmness: "medium",
       towels: 4,
       blankets: 2,
       pillowCount: 4,
@@ -200,21 +195,21 @@ function buildRoomingRecommendation(res) {
 
   return {
     id: "rooming",
-    label: `${capitalize(res.preferences.view || "Preferred")} view ${res.roomType.toLowerCase()} · quiet side`,
-    description: `Seat them on a quieter stack, stage ${res.preferences.pillows} pillows (${res.preferences.pillowFirmness}) and linens before arrival, and double-check ${res.preferences.view || "balanced"} exposure.`,
-    action: "Assign room & stage linens",
+    label: `${capitalize(res.preferences.view || "Preferred")} view ${res.roomType.toLowerCase()} · quieter corridor`,
+    description: `Assign a ${res.roomType.toLowerCase()} near the ${res.preferences.view || "preferred"} exposure and add a housekeeping task to pre-set ${res.preferences.pillows} pillows, ${res.preferences.towels} towels, and ${res.preferences.blankets} blanket(s).`,
+    action: "Select room & send staging task",
     drivers: [
       `${res.preferences.noise} noise`,
       `${res.preferences.pillows} pillows`,
       `${res.preferences.view || "balanced"} view`,
     ],
-    locality: `Linen counts: ${res.preferences.towels} towels · ${res.preferences.blankets} blankets · ${res.preferences.pillowCount} pillows`,
+    locality: `Prep linens: ${res.preferences.towels} towels · ${res.preferences.blankets} blanket(s) · ${res.preferences.pillowCount} pillows`,
     dataPoints: [
       `Arrival ${res.rawData.arrivalWindow}; checkout ${res.rawData.checkoutHabit}`,
       `Complaints to avoid: ${res.complaints.join(" & ") || "none flagged"}`,
-      `Prefers ${res.preferences.noise} hallways and ${res.preferences.pillows} pillows (${res.preferences.pillowFirmness})`,
+      `Prefers ${res.preferences.noise} hallways and ${res.preferences.pillows} pillows`,
     ],
-    rationale: `Addresses ${res.preferences.noise} preference and ${res.complaints[0] || "prior noise"} history while matching the requested view and linens before they arrive.`,
+    rationale: `Aligns the room with the guest’s ${res.preferences.noise} hallway preference and ${res.preferences.view} view while staging linens before arrival to avoid repeat issues like ${res.complaints[0] || "noise"}.`,
     confidence,
   };
 }
@@ -227,9 +222,9 @@ function buildServiceRecommendation(res) {
 
   return {
     id: "service",
-    label: "Check-in cadence + amenity script",
-    description: `Shape the welcome to match arrival ${res.rawData.arrivalWindow}, confirm checkout habit, and walk them to the pool/business center/coffee map without slowing the line.`,
-    action: "Guide arrival & confirm timing",
+    label: "Check-in cadence & amenity walk-through",
+    description: `Match the welcome to a ${res.rawData.arrivalWindow} arrival, verify checkout habit, and walk the guest toward coffee/tea, pool, or computer stations while the room is finalized.`,
+    action: "Confirm timing & walk amenities",
     drivers: [
       `${res.preferences.arrival || "flex"} arrival`,
       `${res.rawData.checkoutHabit} checkout`,
@@ -237,11 +232,11 @@ function buildServiceRecommendation(res) {
     ],
     locality: `Trip purpose: ${res.stayPurpose.toLowerCase()} — ${res.rawData.tripPurposeDetail}`,
     dataPoints: [
-      `Prep mobile key; align with ${res.rawData.arrivalWindow} arrival`,
-      `Point to pool/computer/coffee on property map`,
+      `Prep mobile key; coordinate early/late readiness with housekeeping`,
+      `Point to pool/computer/coffee on property map based on interest`,
       res.rawData.workspaceNeed ? `Desk need: ${res.rawData.workspaceNeed}` : "Standard desk is fine",
     ],
-    rationale: `Keeps check-in tight for a ${res.rawData.checkoutHabit} checkout guest while giving the amenity pointers they expect from a ${res.stayPurpose.toLowerCase()} stay.`,
+    rationale: `Keeps check-in tight for a ${res.rawData.checkoutHabit} checkout guest while providing amenity directions tied to their trip purpose without over-promising readiness.`,
     confidence,
   };
 }
@@ -254,8 +249,8 @@ function buildLocalRecommendation(res) {
   return {
     id: "local",
     label: `Local trio + optional upgrade (${res.location})`,
-    description: `Share three nearby picks tied to ${res.stayPurpose.toLowerCase()} and their transport, with a light upsell if inventory allows.`,
-    action: "Send local recs & offer upsell",
+    description: `Provide three nearby dining/outing ideas that match ${res.stayPurpose.toLowerCase()} and their transport, and only offer a paid upgrade if inventory and guest cues support it.`,
+    action: "Share local picks & note upgrade option",
     drivers: [
       `${res.stayPurpose.toLowerCase()}`,
       `${res.rawData.transport} arrival`,
@@ -267,7 +262,7 @@ function buildLocalRecommendation(res) {
       `Favorite sip: ${res.rawData.coffee || res.rawData.beverage || "standard"}`,
       `Transit: ${res.rawData.transport}; pace recs for that mode`,
     ],
-    rationale: `Balances ${res.location} dining/outing picks with ${res.stayPurpose.toLowerCase()} context and ${res.honorsStatus} perks; upsell only if it fits the trip.`,
+    rationale: `Balances ${res.location} dining/outing picks with ${res.stayPurpose.toLowerCase()} context and ${res.honorsStatus} perks; any upgrade offer is optional and documented.`,
     confidence,
   };
 }
@@ -288,8 +283,7 @@ function buildSummary(res) {
   const complaint = res.complaints.length ? `Flag ${res.complaints.join(" & ")}` : "No active complaints";
   const sleep = res.preferences.noise === "quiet" ? "prioritizes quiet rest" : "okay with moderate noise";
   const arrival = res.preferences.arrival ? `${res.preferences.arrival} arrival` : "flexible arrival";
-  const pillow = res.preferences.pillowFirmness ? `${res.preferences.pillowFirmness} feel` : res.preferences.pillows;
-  return `${res.guest} is a ${res.honorsStatus} Honors guest traveling for ${res.stayPurpose}. They ${sleep}, favor ${res.preferences.pillows} pillows (${pillow}) with a ${res.preferences.view} view, and expect ${arrival}. ${complaint} noted for check-in coaching.`;
+  return `${res.guest} is a ${res.honorsStatus} Honors guest traveling for ${res.stayPurpose}. They ${sleep}, favor ${res.preferences.pillows} pillows with a ${res.preferences.view} view, and expect a ${arrival}. ${complaint} noted for check-in coaching.`;
 }
 
 function renderReservationList() {
@@ -463,7 +457,6 @@ function pickTopPreferences(preferences) {
   const priority = [
     "noise",
     "pillows",
-    "pillowFirmness",
     "view",
     "arrival",
     "towels",
@@ -493,6 +486,8 @@ function renderRawPreview(rawData) {
 function attachActionHandlers(res) {
   document.querySelectorAll(".action-button").forEach((btn) => {
     btn.onclick = () => {
+      const confirmed = window.confirm("Are you sure?");
+      if (!confirmed) return;
       const actionLog = document.getElementById("action-log");
       const rec = btn.dataset.rec;
       const action = btn.dataset.action;
@@ -549,7 +544,7 @@ function buildPredictiveAnalytics(res) {
   return [
     { label: "Arrival vs checkout", value: `${res.rawData.arrivalWindow} arrival · ${res.rawData.checkoutHabit} checkout` },
     { label: "Trip purpose", value: `${res.stayPurpose} — ${res.rawData.tripPurposeDetail}` },
-    { label: "Sleep kit", value: `${res.preferences.pillows} pillows · ${res.preferences.pillowFirmness} firmness` },
+    { label: "Sleep kit", value: `${res.preferences.pillows} pillows · ${res.preferences.pillowCount} on cart` },
     { label: "Linen counts", value: `${res.preferences.towels} towels · ${res.preferences.blankets} blankets · ${res.preferences.pillowCount} pillows` },
     { label: "Amenity guidance", value: `Pool interest ${res.rawData.poolInterest}; suggest pool/computer/coffee direction at check-in` },
     { label: "Workspace", value: res.rawData.workspaceNeed || res.preferences.desk || "Standard desk" },

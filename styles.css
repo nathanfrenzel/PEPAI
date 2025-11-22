@@ -457,9 +457,15 @@ a {
 
 .summary-badges {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+.summary-badges .pill {
+  min-width: 130px;
+  justify-content: center;
 }
 
 .metrics {
