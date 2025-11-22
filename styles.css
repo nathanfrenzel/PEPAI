@@ -308,6 +308,12 @@ a {
   color: #0f172a;
 }
 
+.room-callout {
+  margin: 4px 0;
+  color: #0f4bb3;
+  font-weight: 700;
+}
+
 .data-points {
   margin: 8px 0 0;
   padding-left: 18px;
@@ -392,7 +398,7 @@ a {
 
 .room-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(4, minmax(110px, 1fr));
   gap: 8px;
 }
 
@@ -404,6 +410,7 @@ a {
   display: grid;
   gap: 4px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  position: relative;
 }
 
 .room-id {
@@ -444,6 +451,26 @@ a {
 
 .room-tile.suggested {
   box-shadow: 0 0 0 2px rgba(46, 128, 255, 0.35), 0 8px 18px rgba(46, 128, 255, 0.18);
+}
+
+.room-tags {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.room-tag {
+  background: rgba(46, 128, 255, 0.15);
+  color: #0f4bb3;
+  border: 1px solid rgba(46, 128, 255, 0.4);
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 11px;
 }
 
 .room-map .suggestion {

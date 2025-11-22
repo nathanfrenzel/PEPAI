@@ -178,7 +178,6 @@ const roomMap = [
       { id: "802", status: "available", type: "King", view: "park", noise: "quiet", note: "Near elevators" },
       { id: "803", status: "available", type: "Queen", view: "city", noise: "standard" },
       { id: "804", status: "reserved", type: "Suite", view: "city", noise: "quiet" },
-      { id: "805", status: "ooos", type: "King", view: "river", noise: "standard" },
     ],
   },
   {
@@ -188,7 +187,6 @@ const roomMap = [
       { id: "702", status: "cleaning", type: "Queen", view: "courtyard", noise: "quiet" },
       { id: "703", status: "reserved", type: "Queen", view: "city", noise: "standard" },
       { id: "704", status: "available", type: "King", view: "city", noise: "standard" },
-      { id: "705", status: "occupied", type: "Suite", view: "river", noise: "standard" },
     ],
   },
   {
@@ -198,17 +196,23 @@ const roomMap = [
       { id: "602", status: "occupied", type: "King", view: "city", noise: "standard" },
       { id: "603", status: "available", type: "King", view: "park", noise: "quiet" },
       { id: "604", status: "cleaning", type: "Queen", view: "city", noise: "standard" },
-      { id: "605", status: "reserved", type: "King", view: "river", noise: "standard" },
     ],
   },
 ];
 
-function generateRecommendations(res) {
+function generateRecommendations(res, roomCandidates = []) {
   const rooming = buildRoomingRecommendation(res);
   const service = buildServiceRecommendation(res);
   const local = buildLocalRecommendation(res);
 
-  return [rooming, service, local].sort((a, b) => b.confidence - a.confidence);
+  const ordered = [rooming, service, local].sort((a, b) => b.confidence - a.confidence);
+
+  ordered.forEach((rec, idx) => {
+    const preferred = roomCandidates[idx] || roomCandidates[0];
+    rec.roomCandidate = preferred || null;
+  });
+
+  return ordered;
 }
 
 function computeConfidence(base, adjustments = []) {
@@ -345,7 +349,8 @@ function selectReservation(index, element) {
 
   const res = reservations[index];
   const detailBody = document.getElementById("detail-body");
-  const recommendations = generateRecommendations(res);
+  const roomCandidates = pickRoomCandidates(res, 3);
+  const recommendations = generateRecommendations(res, roomCandidates);
   const topPreferences = pickTopPreferences(res.preferences);
   const profileSummary = buildSummary(res);
   const analytics = buildPredictiveAnalytics(res);
@@ -411,7 +416,7 @@ function selectReservation(index, element) {
         </div>
       </div>
 
-      ${renderRoomMapCard(res)}
+      ${renderRoomMapCard(res, roomCandidates, recommendations)}
     </div>
 
     <div class="divider"></div>
@@ -446,11 +451,15 @@ function selectReservation(index, element) {
                   <div class="rec-column">
                     <p class="eyebrow">Action</p>
                     <p class="rec-note"><strong>${rec.action}</strong></p>
+                    ${rec.roomCandidate ? `<p class="room-callout">Room ${rec.roomCandidate.room.id} · ${rec.roomCandidate.room.view} view</p>` : ""}
                     <p class="muted">${rec.rationale || "Balanced fit"}</p>
                   </div>
                   <div class="rec-column">
                     <p class="eyebrow">Key signals</p>
-                    <ul class="data-points compact">${rec.dataPoints.map((p) => `<li>${p}</li>`).join("")}</ul>
+                    <ul class="data-points compact">${[rec.roomCandidate ? `Matches ${rec.roomCandidate.room.type} ${rec.roomCandidate.room.id}` : "", ...rec.dataPoints]
+                      .filter(Boolean)
+                      .map((p) => `<li>${p}</li>`)
+                      .join("")}</ul>
                   </div>
                 </div>
                 <div class="rec-actions">
@@ -470,8 +479,10 @@ function selectReservation(index, element) {
   attachDataWindow(res, analytics);
 }
 
-function renderRoomMapCard(res) {
-  const suggestion = pickRoomCandidate(res);
+function renderRoomMapCard(res, roomCandidates, recommendations) {
+  const highlightMap = buildRoomHighlights(recommendations || []);
+  const primary = roomCandidates[0];
+  const alternates = roomCandidates.slice(1);
   return `
       <div class="card room-map">
         <div class="room-map-top">
@@ -493,14 +504,18 @@ function renderRoomMapCard(res) {
               <div class="floor-row">
                 <div class="floor-label">Fl ${floor.floor}</div>
                 <div class="room-row">
-                  ${floor.rooms.map((room) => renderRoomTile(room, suggestion?.room)).join("")}
+                  ${floor.rooms
+                    .map((room) => renderRoomTile(room, highlightMap[room.id] || []))
+                    .join("")}
                 </div>
               </div>
             `
             )
             .join("")}
         </div>
-        <p class="muted suggestion">${suggestion ? `Suggested: ${suggestion.room.id} (${suggestion.room.view} view, ${suggestion.room.type})` : "No matching open rooms"}</p>
+        <p class="muted suggestion">${primary ? `Primary: ${primary.room.id} (${primary.room.view} view, ${primary.room.type})${alternates
+    .map((alt, idx) => ` · Alt ${idx + 1}: ${alt.room.id}`)
+    .join("")}` : "No matching open rooms"}</p>
       </div>`;
 }
 
@@ -538,7 +553,7 @@ function pickTopPreferences(preferences) {
   return [...ordered, ...remaining].slice(0, 4);
 }
 
-function pickRoomCandidate(res) {
+function pickRoomCandidates(res, limit = 3) {
   const preferredNoise = res.preferences.noise === "quiet" ? "quiet" : "standard";
   const preferredView = res.preferences.view || "city";
   const preferredType = res.roomType.toLowerCase().includes("suite") ? "Suite" : res.roomType;
@@ -556,19 +571,32 @@ function pickRoomCandidate(res) {
     });
   });
 
-  return matches.sort((a, b) => b.score - a.score)[0];
+  return matches.sort((a, b) => b.score - a.score).slice(0, limit);
 }
 
-function renderRoomTile(room, suggestedRoom) {
+function renderRoomTile(room, tags = []) {
   const statusClass = `status-${room.status}`;
-  const isSuggested = suggestedRoom && room.id === suggestedRoom.id;
+  const isSuggested = tags.length > 0;
   return `
     <div class="room-tile ${statusClass} ${isSuggested ? "suggested" : ""}" aria-label="Room ${room.id} ${room.status}">
+      <div class="room-tags">${tags.map((tag) => `<span class="room-tag">${tag}</span>`).join("")}</div>
       <div class="room-id">${room.id}</div>
       <div class="room-meta">${room.type} · ${room.view}</div>
       <div class="room-note">${room.note || `${room.noise} hall`}</div>
     </div>
   `;
+}
+
+function buildRoomHighlights(recommendations) {
+  const map = {};
+  recommendations.forEach((rec, idx) => {
+    if (!rec.roomCandidate || !rec.roomCandidate.room) return;
+    const tag = idx === 0 ? "Primary" : `Alt ${idx}`;
+    const roomId = rec.roomCandidate.room.id;
+    if (!map[roomId]) map[roomId] = [];
+    map[roomId].push(tag);
+  });
+  return map;
 }
 
 function attachActionHandlers(res) {
