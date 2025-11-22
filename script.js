@@ -223,6 +223,8 @@ function computeConfidence(base, adjustments = []) {
   return Math.max(55, Math.min(Math.round(score), 98));
 }
 
+const savedPreferenceKeys = ["noise", "view", "arrival"];
+
 function buildRoomingRecommendation(res) {
   const quietBonus = res.preferences.noise === "quiet" ? 8 : 2;
   const complaintBonus = res.complaints.length ? 6 : 0;
@@ -232,21 +234,21 @@ function buildRoomingRecommendation(res) {
 
   return {
     id: "rooming",
-    label: `${capitalize(res.preferences.view || "Preferred")} view ${res.roomType.toLowerCase()} · quieter corridor`,
-    description: `Assign a ${res.roomType.toLowerCase()} near the ${res.preferences.view || "preferred"} exposure and add a housekeeping task to pre-set ${res.preferences.pillows} pillows, ${res.preferences.towels} towels, and ${res.preferences.blankets} blanket(s).`,
-    action: "Select room & send staging task",
+    label: `Likely fit: ${capitalize(res.preferences.view || "Preferred")} view ${res.roomType.toLowerCase()} · quieter corridor`,
+    description: `AI predicts they will likely appreciate a ${res.roomType.toLowerCase()} near the ${res.preferences.view || "preferred"} exposure and a housekeeping task to pre-set ${res.preferences.pillows} pillows, ${res.preferences.towels} towels, and ${res.preferences.blankets} blanket(s).`,
+    action: "Select room & send staging task (AI-predicted)",
     drivers: [
-      `${res.preferences.noise} noise`,
-      `${res.preferences.pillows} pillows`,
-      `${res.preferences.view || "balanced"} view`,
+      `Saved: ${res.preferences.noise} hall`,
+      `Likely prefers ${res.preferences.pillows} pillows`,
+      `${res.preferences.view || "balanced"} view (saved)`
     ],
     locality: `Prep linens: ${res.preferences.towels} towels · ${res.preferences.blankets} blanket(s) · ${res.preferences.pillowCount} pillows`,
     dataPoints: [
-      `Arrival ${res.rawData.arrivalWindow}; checkout ${res.rawData.checkoutHabit}`,
+      `Saved arrival ${res.rawData.arrivalWindow}; checkout ${res.rawData.checkoutHabit}`,
       `Complaints to avoid: ${res.complaints.join(" & ") || "none flagged"}`,
-      `Prefers ${res.preferences.noise} hallways and ${res.preferences.pillows} pillows`,
+      `Likely values ${res.preferences.noise} hallways and ${res.preferences.pillows} pillows`,
     ],
-    rationale: `Aligns the room with the guest’s ${res.preferences.noise} hallway preference and ${res.preferences.view} view while staging linens before arrival to avoid repeat issues like ${res.complaints[0] || "noise"}.`,
+    rationale: `Aligns saved hallway/view preferences with AI-predicted linen staging to likely prevent repeat issues like ${res.complaints[0] || "noise"}.`,
     confidence,
   };
 }
@@ -259,21 +261,21 @@ function buildServiceRecommendation(res) {
 
   return {
     id: "service",
-    label: "Check-in cadence & amenity walk-through",
-    description: `Match the welcome to a ${res.rawData.arrivalWindow} arrival, verify checkout habit, and walk the guest toward coffee/tea, pool, or computer stations while the room is finalized.`,
-    action: "Confirm timing & walk amenities",
+    label: "Likely timing & amenity walk-through",
+    description: `Match the welcome to the saved ${res.rawData.arrivalWindow} arrival, verify checkout habit, and (as predicted) walk the guest toward coffee/tea, pool, or computer stations while the room is finalized.`,
+    action: "Confirm timing & walk amenities (AI-predicted)",
     drivers: [
-      `${res.preferences.arrival || "flex"} arrival`,
-      `${res.rawData.checkoutHabit} checkout`,
-      res.rawData.poolInterest !== "low" ? "pool interest" : "coffee/tea direction",
+      `Saved: ${res.preferences.arrival || "flex"} arrival`,
+      `${res.rawData.checkoutHabit} checkout (saved)`,
+      res.rawData.poolInterest !== "low" ? "Likely pool interest" : "Likely coffee/tea direction",
     ],
     locality: `Trip purpose: ${res.stayPurpose.toLowerCase()} — ${res.rawData.tripPurposeDetail}`,
     dataPoints: [
       `Prep mobile key; coordinate early/late readiness with housekeeping`,
-      `Point to pool/computer/coffee on property map based on interest`,
-      res.rawData.workspaceNeed ? `Desk need: ${res.rawData.workspaceNeed}` : "Standard desk is fine",
+      `Likely appreciates pool/computer/coffee directions on arrival`,
+      res.rawData.workspaceNeed ? `Saved desk need: ${res.rawData.workspaceNeed}` : "Standard desk is fine (assumed)",
     ],
-    rationale: `Keeps check-in tight for a ${res.rawData.checkoutHabit} checkout guest while providing amenity directions tied to their trip purpose without over-promising readiness.`,
+    rationale: `Keeps check-in tight for a ${res.rawData.checkoutHabit} checkout guest while offering likely-interest amenity directions tied to trip purpose without over-promising readiness.`,
     confidence,
   };
 }
@@ -285,21 +287,21 @@ function buildLocalRecommendation(res) {
 
   return {
     id: "local",
-    label: `Local trio + optional upgrade (${res.location})`,
-    description: `Provide three nearby dining/outing ideas that match ${res.stayPurpose.toLowerCase()} and their transport, and only offer a paid upgrade if inventory and guest cues support it.`,
-    action: "Share local picks & note upgrade option",
+    label: `Likely local trio + optional upgrade (${res.location})`,
+    description: `Provide three nearby dining/outing ideas that AI predicts will likely match ${res.stayPurpose.toLowerCase()} and their transport, and only offer a paid upgrade if inventory and saved guest cues support it.`,
+    action: "Share local picks & note upgrade option (AI-predicted)",
     drivers: [
       `${res.stayPurpose.toLowerCase()}`,
-      `${res.rawData.transport} arrival`,
+      `${res.rawData.transport} arrival (saved)`,
       `${res.honorsStatus} status`,
     ],
     locality: buildLocalList(res.location),
     dataPoints: [
       `Purpose detail: ${res.rawData.tripPurposeDetail}`,
-      `Favorite sip: ${res.rawData.coffee || res.rawData.beverage || "standard"}`,
-      `Transit: ${res.rawData.transport}; pace recs for that mode`,
+      `Likely favorite sip: ${res.rawData.coffee || res.rawData.beverage || "standard"}`,
+      `Saved transit: ${res.rawData.transport}; pace recs for that mode`,
     ],
-    rationale: `Balances ${res.location} dining/outing picks with ${res.stayPurpose.toLowerCase()} context and ${res.honorsStatus} perks; any upgrade offer is optional and documented.`,
+    rationale: `Balances ${res.location} dining/outing picks with ${res.stayPurpose.toLowerCase()} context and ${res.honorsStatus} perks; upgrade offer is optional and based on likely interest.`,
     confidence,
   };
 }
@@ -318,9 +320,9 @@ function buildLocalList(location) {
 
 function buildSummary(res) {
   const complaint = res.complaints.length ? `Flag ${res.complaints.join(" & ")}` : "No active complaints";
-  const sleep = res.preferences.noise === "quiet" ? "prioritizes quiet rest" : "okay with moderate noise";
-  const arrival = res.preferences.arrival ? `${res.preferences.arrival} arrival` : "flexible arrival";
-  return `${res.guest} is a ${res.honorsStatus} Honors guest traveling for ${res.stayPurpose}. They ${sleep}, favor ${res.preferences.pillows} pillows with a ${res.preferences.view} view, and expect a ${arrival}. ${complaint} noted for check-in coaching.`;
+  const sleep = res.preferences.noise === "quiet" ? "likely prioritizes quiet rest" : "likely okay with moderate noise";
+  const arrival = res.preferences.arrival ? `saved ${res.preferences.arrival} arrival` : "flexible arrival";
+  return `${res.guest} is a ${res.honorsStatus} Honors guest traveling for ${res.stayPurpose}. Based on saved preferences we expect a ${res.preferences.view} view and ${arrival}, and AI predicts they likely favor ${res.preferences.pillows} pillows while traveling. ${complaint} noted for check-in coaching.`;
 }
 
 function renderReservationList() {
@@ -412,7 +414,7 @@ function selectReservation(index, element) {
         <p class="muted">AI-selected top four signals</p>
         <div class="key-points">
           ${renderPreferences(topPreferences)}
-          <div class="key-point"><span class="dot"></span><div><strong>Behaviors</strong>${res.behaviors.join(", ")}</div></div>
+          <div class="key-point"><span class="dot"></span><div><strong>Likely behaviors (AI)</strong>: likely ${res.behaviors.join(", ")}</div></div>
         </div>
       </div>
 
@@ -531,7 +533,7 @@ function renderPreferences(preferences) {
       ([key, value]) => `
         <div class="key-point">
           <span class="dot"></span>
-          <div><strong>${key}</strong>${value}</div>
+          <div><strong>${savedPreferenceKeys.includes(key) ? "Saved" : "Likely"} ${formatKey(key)}</strong>: ${savedPreferenceKeys.includes(key) ? value : `likely ${value}`}</div>
         </div>`
     )
     .join("");
@@ -664,14 +666,14 @@ function renderRawData(rawData) {
 
 function buildPredictiveAnalytics(res) {
   return [
-    { label: "Arrival vs checkout", value: `${res.rawData.arrivalWindow} arrival · ${res.rawData.checkoutHabit} checkout` },
+    { label: "Arrival vs checkout", value: `Saved ${res.rawData.arrivalWindow} arrival · ${res.rawData.checkoutHabit} checkout` },
     { label: "Trip purpose", value: `${res.stayPurpose} — ${res.rawData.tripPurposeDetail}` },
-    { label: "Sleep kit", value: `${res.preferences.pillows} pillows · ${res.preferences.pillowCount} on cart` },
-    { label: "Linen counts", value: `${res.preferences.towels} towels · ${res.preferences.blankets} blankets · ${res.preferences.pillowCount} pillows` },
-    { label: "Amenity guidance", value: `Pool interest ${res.rawData.poolInterest}; suggest pool/computer/coffee direction at check-in` },
-    { label: "Workspace", value: res.rawData.workspaceNeed || res.preferences.desk || "Standard desk" },
-    { label: "Upsell", value: "Room upgrade and paid late checkout surfaced when available" },
-    { label: "Local recs", value: `Food/travel/business tips tailored to ${res.location}` },
+    { label: "Sleep kit", value: `AI predicts they likely want ${res.preferences.pillows} pillows · ${res.preferences.pillowCount} staged` },
+    { label: "Linen counts", value: `Likely ${res.preferences.towels} towels · ${res.preferences.blankets} blankets · ${res.preferences.pillowCount} pillows` },
+    { label: "Amenity guidance", value: `Likely to appreciate pool/computer/coffee direction based on ${res.rawData.poolInterest} interest` },
+    { label: "Workspace", value: res.rawData.workspaceNeed ? `Saved: ${res.rawData.workspaceNeed}` : res.preferences.desk ? `Likely desk need: ${res.preferences.desk}` : "Standard desk (assumed)" },
+    { label: "Upsell", value: "Optional upgrade surfaced only if inventory fits likely interest" },
+    { label: "Local recs", value: `AI predicts ${res.location} tips aligned to trip purpose and transit` },
   ];
 }
 
