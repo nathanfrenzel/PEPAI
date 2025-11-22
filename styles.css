@@ -242,13 +242,13 @@ a {
 .recommendation {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   align-items: stretch;
-  padding: 12px;
-  border-radius: 14px;
+  padding: 14px;
+  border-radius: 16px;
   border: 1px solid var(--border);
   background: #ffffff;
-  box-shadow: 0 6px 18px rgba(12, 20, 46, 0.08);
+  box-shadow: 0 8px 22px rgba(12, 20, 46, 0.08);
 }
 
 .recommendations-header {
@@ -267,19 +267,34 @@ a {
 .rec-chip {
   background: #111827;
   color: #ffffff;
-  border-radius: 8px;
-  padding: 8px 10px;
-  font-weight: 700;
+  border-radius: 10px;
+  padding: 9px 14px;
+  font-weight: 800;
   font-size: 12px;
   height: fit-content;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  min-width: 118px;
+  text-align: center;
+  border: 1px solid rgba(17, 24, 39, 0.1);
+}
+
+.primary-chip {
+  background: #111827;
+  color: #ffffff;
+  border-color: rgba(17, 24, 39, 0.2);
+}
+
+.alt-chip {
+  background: #e5eaf5;
+  color: #0f172a;
+  border-color: rgba(46, 128, 255, 0.25);
 }
 
 .rec-top {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   align-items: flex-start;
 }
 
@@ -287,6 +302,13 @@ a {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 12px;
+}
+
+.rec-body.refined {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
 }
 
 .rec-column {
@@ -308,6 +330,18 @@ a {
   color: #0f172a;
 }
 
+.rec-desc {
+  color: #475569;
+  margin-top: 4px;
+}
+
+.rec-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
 .room-callout {
   margin: 4px 0;
   color: #0f4bb3;
@@ -325,6 +359,12 @@ a {
 .data-points.compact {
   margin-top: 4px;
   gap: 2px;
+}
+
+.rec-locality {
+  margin-top: 8px;
+  color: #0f4bb3;
+  font-weight: 600;
 }
 
 .room-map-top {

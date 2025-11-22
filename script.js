@@ -431,23 +431,30 @@ function selectReservation(index, element) {
       </div>
         ${recommendations
           .map(
-            (rec, idx) => `
+            (rec, idx) => {
+              const signalList = [
+                rec.roomCandidate ? `Matches ${rec.roomCandidate.room.type} ${rec.roomCandidate.room.id}` : "",
+                ...rec.dataPoints,
+              ]
+                .filter(Boolean)
+                .slice(0, 4);
+
+              return `
               <div class="recommendation">
                 <div class="rec-top">
                   <div class="rec-main">
-                    <div class="rec-chip">${idx === 0 ? "Primary" : `Alternate ${idx}`}</div>
+                    <div class="rec-chip ${idx === 0 ? "primary-chip" : "alt-chip"}">${idx === 0 ? "Primary" : `Alternate ${idx}`}</div>
                     <div>
                       <p class="rec-title">${rec.label}</p>
-                      <p class="muted">${rec.description}</p>
-                      <div class="res-meta" style="margin-top:6px;">${rec.drivers
+                      <p class="rec-desc">${rec.description}</p>
+                      <div class="rec-tags">${rec.drivers
                         .map((d) => `<span class="pill subtle">${d}</span>`)
                         .join("")}</div>
-                      <p class="muted locality">${rec.locality}</p>
                     </div>
                   </div>
                   ${renderConfidenceStack(rec.confidence)}
                 </div>
-                <div class="rec-body">
+                <div class="rec-body refined">
                   <div class="rec-column">
                     <p class="eyebrow">Action</p>
                     <p class="rec-note"><strong>${rec.action}</strong></p>
@@ -455,11 +462,9 @@ function selectReservation(index, element) {
                     <p class="muted">${rec.rationale || "Balanced fit"}</p>
                   </div>
                   <div class="rec-column">
-                    <p class="eyebrow">Key signals</p>
-                    <ul class="data-points compact">${[rec.roomCandidate ? `Matches ${rec.roomCandidate.room.type} ${rec.roomCandidate.room.id}` : "", ...rec.dataPoints]
-                      .filter(Boolean)
-                      .map((p) => `<li>${p}</li>`)
-                      .join("")}</ul>
+                    <p class="eyebrow">Why this guest</p>
+                    <ul class="data-points compact">${signalList.map((p) => `<li>${p}</li>`).join("")}</ul>
+                    <p class="rec-locality">${rec.locality}</p>
                   </div>
                 </div>
                 <div class="rec-actions">
@@ -467,8 +472,9 @@ function selectReservation(index, element) {
                   <button class="btn btn-ghost action-button" data-rec="${rec.label}" data-action="${rec.action}" data-outcome="rejected">Reject</button>
                 </div>
             </div>
-          `
-        )
+          `;
+            }
+          )
         .join("")}
     </div>
 
