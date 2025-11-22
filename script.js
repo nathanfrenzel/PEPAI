@@ -170,6 +170,39 @@ const reservations = [
   },
 ];
 
+const roomMap = [
+  {
+    floor: 8,
+    rooms: [
+      { id: "801", status: "occupied", type: "Suite", view: "river", noise: "standard" },
+      { id: "802", status: "available", type: "King", view: "park", noise: "quiet", note: "Near elevators" },
+      { id: "803", status: "available", type: "Queen", view: "city", noise: "standard" },
+      { id: "804", status: "reserved", type: "Suite", view: "city", noise: "quiet" },
+      { id: "805", status: "ooos", type: "King", view: "river", noise: "standard" },
+    ],
+  },
+  {
+    floor: 7,
+    rooms: [
+      { id: "701", status: "available", type: "King", view: "park", noise: "quiet", note: "Away from ice" },
+      { id: "702", status: "cleaning", type: "Queen", view: "courtyard", noise: "quiet" },
+      { id: "703", status: "reserved", type: "Queen", view: "city", noise: "standard" },
+      { id: "704", status: "available", type: "King", view: "city", noise: "standard" },
+      { id: "705", status: "occupied", type: "Suite", view: "river", noise: "standard" },
+    ],
+  },
+  {
+    floor: 6,
+    rooms: [
+      { id: "601", status: "available", type: "Queen", view: "courtyard", noise: "quiet" },
+      { id: "602", status: "occupied", type: "King", view: "city", noise: "standard" },
+      { id: "603", status: "available", type: "King", view: "park", noise: "quiet" },
+      { id: "604", status: "cleaning", type: "Queen", view: "city", noise: "standard" },
+      { id: "605", status: "reserved", type: "King", view: "river", noise: "standard" },
+    ],
+  },
+];
+
 function generateRecommendations(res) {
   const rooming = buildRoomingRecommendation(res);
   const service = buildServiceRecommendation(res);
@@ -369,7 +402,7 @@ function selectReservation(index, element) {
     </div>
 
     <div class="detail-grid">
-      <div class="card">
+        <div class="card">
         <h3>Raw preferences</h3>
         <p class="muted">AI-selected top four signals</p>
         <div class="key-points">
@@ -378,11 +411,7 @@ function selectReservation(index, element) {
         </div>
       </div>
 
-      <div class="card">
-        <h3>Raw data snapshot</h3>
-        <p class="muted">Operational signals driving today’s fit</p>
-        <ul class="data-points compact">${renderRawPreview(res.rawData)}</ul>
-      </div>
+      ${renderRoomMapCard(res)}
     </div>
 
     <div class="divider"></div>
@@ -441,6 +470,40 @@ function selectReservation(index, element) {
   attachDataWindow(res, analytics);
 }
 
+function renderRoomMapCard(res) {
+  const suggestion = pickRoomCandidate(res);
+  return `
+      <div class="card room-map">
+        <div class="room-map-top">
+          <div>
+            <h3>Room map</h3>
+            <p class="muted">Preview of open inventory</p>
+          </div>
+          <div class="room-legend">
+            <span class="legend-chip available">Available</span>
+            <span class="legend-chip reserved">Reserved</span>
+            <span class="legend-chip cleaning">Cleaning</span>
+            <span class="legend-chip ooos">OOS</span>
+          </div>
+        </div>
+        <div class="room-grid">
+          ${roomMap
+            .map(
+              (floor) => `
+              <div class="floor-row">
+                <div class="floor-label">Fl ${floor.floor}</div>
+                <div class="room-row">
+                  ${floor.rooms.map((room) => renderRoomTile(room, suggestion?.room)).join("")}
+                </div>
+              </div>
+            `
+            )
+            .join("")}
+        </div>
+        <p class="muted suggestion">${suggestion ? `Suggested: ${suggestion.room.id} (${suggestion.room.view} view, ${suggestion.room.type})` : "No matching open rooms"}</p>
+      </div>`;
+}
+
 function renderPreferences(preferences) {
   return preferences
     .map(
@@ -475,12 +538,37 @@ function pickTopPreferences(preferences) {
   return [...ordered, ...remaining].slice(0, 4);
 }
 
-function renderRawPreview(rawData) {
-  const previewKeys = ["arrivalWindow", "checkoutHabit", "tripPurposeDetail", "workspaceNeed", "poolInterest"];
-  return previewKeys
-    .filter((key) => rawData[key])
-    .map((key) => `<li><strong>${formatKey(key)}:</strong> ${rawData[key]}</li>`)
-    .join("");
+function pickRoomCandidate(res) {
+  const preferredNoise = res.preferences.noise === "quiet" ? "quiet" : "standard";
+  const preferredView = res.preferences.view || "city";
+  const preferredType = res.roomType.toLowerCase().includes("suite") ? "Suite" : res.roomType;
+
+  const matches = [];
+
+  roomMap.forEach((floor) => {
+    floor.rooms.forEach((room) => {
+      if (room.status !== "available") return;
+      let score = 0;
+      if (room.view === preferredView) score += 3;
+      if (room.noise === preferredNoise) score += 2;
+      if (room.type === preferredType) score += 2;
+      matches.push({ room, floor: floor.floor, score });
+    });
+  });
+
+  return matches.sort((a, b) => b.score - a.score)[0];
+}
+
+function renderRoomTile(room, suggestedRoom) {
+  const statusClass = `status-${room.status}`;
+  const isSuggested = suggestedRoom && room.id === suggestedRoom.id;
+  return `
+    <div class="room-tile ${statusClass} ${isSuggested ? "suggested" : ""}" aria-label="Room ${room.id} ${room.status}">
+      <div class="room-id">${room.id}</div>
+      <div class="room-meta">${room.type} · ${room.view}</div>
+      <div class="room-note">${room.note || `${room.noise} hall`}</div>
+    </div>
+  `;
 }
 
 function attachActionHandlers(res) {
