@@ -172,30 +172,30 @@ const reservations = [
 
 const roomMap = [
   {
-    floor: 8,
+    floor: 3,
     rooms: [
-      { id: "801", status: "occupied", type: "Suite", view: "river", noise: "standard" },
-      { id: "802", status: "available", type: "King", view: "park", noise: "quiet", note: "Near elevators" },
-      { id: "803", status: "available", type: "Queen", view: "city", noise: "standard" },
-      { id: "804", status: "reserved", type: "Suite", view: "city", noise: "quiet" },
+      { id: "302", status: "available", type: "King", view: "river", noise: "quiet", note: "Near elevators" },
+      { id: "314", status: "occupied", type: "Suite", view: "city", noise: "standard" },
+      { id: "321", status: "available", type: "Queen", view: "park", noise: "standard", note: "Close to stairs" },
+      { id: "335", status: "reserved", type: "Suite", view: "courtyard", noise: "quiet" },
     ],
   },
   {
-    floor: 7,
+    floor: 2,
     rooms: [
-      { id: "701", status: "available", type: "King", view: "park", noise: "quiet", note: "Away from ice" },
-      { id: "702", status: "cleaning", type: "Queen", view: "courtyard", noise: "quiet" },
-      { id: "703", status: "reserved", type: "Queen", view: "city", noise: "standard" },
-      { id: "704", status: "available", type: "King", view: "city", noise: "standard" },
+      { id: "205", status: "reserved", type: "Queen", view: "city", noise: "standard" },
+      { id: "218", status: "available", type: "King", view: "park", noise: "quiet", note: "Away from ice" },
+      { id: "224", status: "cleaning", type: "Queen", view: "courtyard", noise: "quiet" },
+      { id: "239", status: "available", type: "King", view: "river", noise: "quiet" },
     ],
   },
   {
-    floor: 6,
+    floor: 1,
     rooms: [
-      { id: "601", status: "available", type: "Queen", view: "courtyard", noise: "quiet" },
-      { id: "602", status: "occupied", type: "King", view: "city", noise: "standard" },
-      { id: "603", status: "available", type: "King", view: "park", noise: "quiet" },
-      { id: "604", status: "cleaning", type: "Queen", view: "city", noise: "standard" },
+      { id: "103", status: "available", type: "Queen", view: "courtyard", noise: "quiet", note: "Near lobby" },
+      { id: "112", status: "occupied", type: "King", view: "city", noise: "standard" },
+      { id: "128", status: "available", type: "King", view: "city", noise: "standard" },
+      { id: "141", status: "cleaning", type: "Queen", view: "park", noise: "quiet" },
     ],
   },
 ];

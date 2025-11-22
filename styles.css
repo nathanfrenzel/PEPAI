@@ -268,13 +268,13 @@ a {
   background: #111827;
   color: #ffffff;
   border-radius: 10px;
-  padding: 9px 14px;
+  padding: 10px 16px;
   font-weight: 800;
   font-size: 12px;
   height: fit-content;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  min-width: 118px;
+  min-width: 142px;
   text-align: center;
   border: 1px solid rgba(17, 24, 39, 0.1);
 }
