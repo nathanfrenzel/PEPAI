@@ -31,6 +31,7 @@ const reservations = [
       workspaceNeed: "light",
       coffee: "prefers tea",
       transport: "rideshare",
+      paymentSource: "Amex on file with Uber credits",
     },
   },
   {
@@ -65,6 +66,7 @@ const reservations = [
       workspaceNeed: "ergonomic chair",
       coffee: "double espresso",
       transport: "rental car",
+      paymentSource: "Corporate Amex on file",
     },
   },
   {
@@ -98,6 +100,7 @@ const reservations = [
       workspaceNeed: "none",
       coffee: "iced cold brew",
       transport: "rideshare",
+      paymentSource: "Amex with recent Uber charge",
     },
   },
   {
@@ -132,6 +135,7 @@ const reservations = [
       workspaceNeed: "standing desk",
       coffee: "loose leaf tea",
       transport: "rental car",
+      paymentSource: "Amex on file",
     },
   },
   {
@@ -166,6 +170,7 @@ const reservations = [
       workspaceNeed: "none",
       coffee: "cappuccino",
       transport: "rideshare",
+      paymentSource: "Amex with local rideshare charges",
     },
   },
 ];
@@ -200,19 +205,12 @@ const roomMap = [
   },
 ];
 
-function generateRecommendations(res, roomCandidates = []) {
-  const rooming = buildRoomingRecommendation(res);
-  const service = buildServiceRecommendation(res);
+function generateRecommendations(res) {
+  const welcome = buildWelcomeRecommendation(res);
+  const comfort = buildComfortRecommendation(res);
   const local = buildLocalRecommendation(res);
 
-  const ordered = [rooming, service, local].sort((a, b) => b.confidence - a.confidence);
-
-  ordered.forEach((rec, idx) => {
-    const preferred = roomCandidates[idx] || roomCandidates[0];
-    rec.roomCandidate = preferred || null;
-  });
-
-  return ordered;
+  return [welcome, comfort, local].sort((a, b) => b.confidence - a.confidence);
 }
 
 function computeConfidence(base, adjustments = []) {
@@ -225,57 +223,54 @@ function computeConfidence(base, adjustments = []) {
 
 const savedPreferenceKeys = ["noise", "view", "arrival"];
 
-function buildRoomingRecommendation(res) {
-  const quietBonus = res.preferences.noise === "quiet" ? 8 : 2;
-  const complaintBonus = res.complaints.length ? 6 : 0;
-  const arrivalBonus = res.preferences.arrival === "early" ? 4 : res.preferences.arrival === "late" ? 2 : 0;
-
-  const confidence = computeConfidence(78, [quietBonus, complaintBonus, arrivalBonus]);
+function buildWelcomeRecommendation(res) {
+  const arrivalWeight = res.preferences.arrival === "early" ? 8 : 4;
+  const transportWeight = res.rawData.transport === "rideshare" ? 6 : 3;
+  const confidence = computeConfidence(76, [arrivalWeight, transportWeight]);
 
   return {
-    id: "rooming",
-    label: `Likely fit: ${capitalize(res.preferences.view || "Preferred")} view ${res.roomType.toLowerCase()} · quieter corridor`,
-    description: `AI predicts they will likely appreciate a ${res.roomType.toLowerCase()} near the ${res.preferences.view || "preferred"} exposure and a housekeeping task to pre-set ${res.preferences.pillows} pillows, ${res.preferences.towels} towels, and ${res.preferences.blankets} blanket(s).`,
-    action: "Select room & send staging task (AI-predicted)",
+    id: "welcome",
+    label: "Welcome & walkable essentials",
+    description: `Payment on file shows ${res.rawData.paymentSource}; AI predicts they likely arrived via rideshare and prefer fast guidance. Offer water, confirm mobile key, and walk them to coffee/tea and the business center on arrival.`,
+    action: "Speedy check-in + amenity walk (AI-predicted)",
     drivers: [
-      `Saved: ${res.preferences.noise} hall`,
-      `Likely prefers ${res.preferences.pillows} pillows`,
-      `${res.preferences.view || "balanced"} view (saved)`
+      `${res.rawData.arrivalWindow} arrival (saved)`,
+      `${res.rawData.checkoutHabit} checkout habit (saved)`,
+      `${res.rawData.transport} traveler`,
     ],
-    locality: `Prep linens: ${res.preferences.towels} towels · ${res.preferences.blankets} blanket(s) · ${res.preferences.pillowCount} pillows`,
+    locality: `${res.location.split(",")[0]} lobby: coffee/tea to the left · business center behind front desk · pool level 2`,
     dataPoints: [
-      `Saved arrival ${res.rawData.arrivalWindow}; checkout ${res.rawData.checkoutHabit}`,
-      `Complaints to avoid: ${res.complaints.join(" & ") || "none flagged"}`,
-      `Likely values ${res.preferences.noise} hallways and ${res.preferences.pillows} pillows`,
+      `Likely values a short walk from rideshare drop (AI)`,
+      `Saved timing: ${res.rawData.arrivalWindow} arrival`,
+      res.rawData.poolInterest !== "low" ? "Likely interested in pool hours" : "Likely prefers coffee/tea guidance",
     ],
-    rationale: `Aligns saved hallway/view preferences with AI-predicted linen staging to likely prevent repeat issues like ${res.complaints[0] || "noise"}.`,
+    rationale: `Keeps the welcome concise while likely matching their transit and timing preferences without promising a specific room.`,
     confidence,
   };
 }
 
-function buildServiceRecommendation(res) {
-  const earlyArrival = res.preferences.arrival === "early" ? 6 : 0;
-  const upsellBonus = res.roomType === "Suite" ? 4 : 2;
-  const complaintPenalty = res.complaints.length ? -2 : 0;
-  const confidence = computeConfidence(74, [earlyArrival, upsellBonus, complaintPenalty]);
+function buildComfortRecommendation(res) {
+  const linenWeight = res.preferences.towels >= 4 ? 7 : 4;
+  const complaintWeight = res.complaints.length ? 6 : 2;
+  const confidence = computeConfidence(74, [linenWeight, complaintWeight]);
 
   return {
-    id: "service",
-    label: "Likely timing & amenity walk-through",
-    description: `Match the welcome to the saved ${res.rawData.arrivalWindow} arrival, verify checkout habit, and (as predicted) walk the guest toward coffee/tea, pool, or computer stations while the room is finalized.`,
-    action: "Confirm timing & walk amenities (AI-predicted)",
+    id: "comfort",
+    label: "Likely comfort setup",
+    description: `AI predicts they likely appreciate a quick comfort setup: stage ${res.preferences.towels} towels, ${res.preferences.blankets} blanket(s), and ${res.preferences.pillowCount} pillows; offer extra water and note quiet hours since noise was previously flagged.`,
+    action: "Send linen & welcome amenity (AI-predicted)",
     drivers: [
-      `Saved: ${res.preferences.arrival || "flex"} arrival`,
-      `${res.rawData.checkoutHabit} checkout (saved)`,
-      res.rawData.poolInterest !== "low" ? "Likely pool interest" : "Likely coffee/tea direction",
+      `Saved noise pref: ${res.preferences.noise}`,
+      `${res.preferences.towels} towels likely preferred`,
+      `${res.complaints.length ? "Prior complaint noted" : "No active complaints"}`,
     ],
-    locality: `Trip purpose: ${res.stayPurpose.toLowerCase()} — ${res.rawData.tripPurposeDetail}`,
+    locality: `Deliver to assigned room after keying; log quiet-hours reminder`,
     dataPoints: [
-      `Prep mobile key; coordinate early/late readiness with housekeeping`,
-      `Likely appreciates pool/computer/coffee directions on arrival`,
-      res.rawData.workspaceNeed ? `Saved desk need: ${res.rawData.workspaceNeed}` : "Standard desk is fine (assumed)",
+      `Likely values extra towels/blankets (AI)`,
+      `Saved request: ${res.rawData.tripPurposeDetail.toLowerCase()}`,
+      `Noise complaint flagged — remind about quiet hours`,
     ],
-    rationale: `Keeps check-in tight for a ${res.rawData.checkoutHabit} checkout guest while offering likely-interest amenity directions tied to trip purpose without over-promising readiness.`,
+    rationale: `Focuses on realistic lobby/housekeeping moves without auto-assigning rooms while addressing likely comfort needs.`,
     confidence,
   };
 }
@@ -283,25 +278,25 @@ function buildServiceRecommendation(res) {
 function buildLocalRecommendation(res) {
   const loyaltyBonus = res.honorsStatus === "Diamond" ? 6 : res.honorsStatus === "Gold" ? 4 : 2;
   const purposeBonus = res.stayPurpose.toLowerCase().includes("leisure") ? 5 : 3;
-  const confidence = computeConfidence(76, [loyaltyBonus, purposeBonus]);
+  const confidence = computeConfidence(78, [loyaltyBonus, purposeBonus]);
 
   return {
     id: "local",
-    label: `Likely local trio + optional upgrade (${res.location})`,
-    description: `Provide three nearby dining/outing ideas that AI predicts will likely match ${res.stayPurpose.toLowerCase()} and their transport, and only offer a paid upgrade if inventory and saved guest cues support it.`,
-    action: "Share local picks & note upgrade option (AI-predicted)",
+    label: "Likely walkable picks",
+    description: `AI suggests three walkable spots based on likely rideshare use from the Amex on file and ${res.stayPurpose.toLowerCase()} context. Share them verbally and print a simple map if asked.`,
+    action: "Share walkable dining & activity trio (AI-predicted)",
     drivers: [
+      `${res.rawData.transport} / Amex on file`,
       `${res.stayPurpose.toLowerCase()}`,
-      `${res.rawData.transport} arrival (saved)`,
       `${res.honorsStatus} status`,
     ],
     locality: buildLocalList(res.location),
     dataPoints: [
-      `Purpose detail: ${res.rawData.tripPurposeDetail}`,
-      `Likely favorite sip: ${res.rawData.coffee || res.rawData.beverage || "standard"}`,
-      `Saved transit: ${res.rawData.transport}; pace recs for that mode`,
+      `Saved payment source suggests rideshare/walking`,
+      `Trip detail: ${res.rawData.tripPurposeDetail}`,
+      `Likely prefers nearby options to avoid extra transit`,
     ],
-    rationale: `Balances ${res.location} dining/outing picks with ${res.stayPurpose.toLowerCase()} context and ${res.honorsStatus} perks; upgrade offer is optional and based on likely interest.`,
+    rationale: `Keeps recommendations realistic to Hilton data (payment + purpose) and favors nearby options they can likely walk to from drop-off.`,
     confidence,
   };
 }
@@ -352,7 +347,7 @@ function selectReservation(index, element) {
   const res = reservations[index];
   const detailBody = document.getElementById("detail-body");
   const roomCandidates = pickRoomCandidates(res, 3);
-  const recommendations = generateRecommendations(res, roomCandidates);
+  const recommendations = generateRecommendations(res);
   const topPreferences = pickTopPreferences(res.preferences);
   const profileSummary = buildSummary(res);
   const analytics = buildPredictiveAnalytics(res);
@@ -418,7 +413,7 @@ function selectReservation(index, element) {
         </div>
       </div>
 
-      ${renderRoomMapCard(res, roomCandidates, recommendations)}
+      ${renderRoomMapCard(res, roomCandidates)}
     </div>
 
     <div class="divider"></div>
@@ -427,19 +422,14 @@ function selectReservation(index, element) {
       <div class="recommendations-header">
         <div>
           <p class="eyebrow">AI recommendations</p>
-          <h3>Rooming &amp; service moves</h3>
+          <h3>Amenities &amp; nearby picks</h3>
         </div>
         <p class="muted">Click Accept or Reject to confirm the action for this guest.</p>
       </div>
         ${recommendations
           .map(
             (rec, idx) => {
-              const signalList = [
-                rec.roomCandidate ? `Matches ${rec.roomCandidate.room.type} ${rec.roomCandidate.room.id}` : "",
-                ...rec.dataPoints,
-              ]
-                .filter(Boolean)
-                .slice(0, 4);
+                const signalList = rec.dataPoints.slice(0, 4);
 
               return `
               <div class="recommendation">
@@ -460,7 +450,6 @@ function selectReservation(index, element) {
                   <div class="rec-column">
                     <p class="eyebrow">Action</p>
                     <p class="rec-note"><strong>${rec.action}</strong></p>
-                    ${rec.roomCandidate ? `<p class="room-callout">Room ${rec.roomCandidate.room.id} · ${rec.roomCandidate.room.view} view</p>` : ""}
                     <p class="muted">${rec.rationale || "Balanced fit"}</p>
                   </div>
                   <div class="rec-column">
@@ -487,8 +476,8 @@ function selectReservation(index, element) {
   attachDataWindow(res, analytics);
 }
 
-function renderRoomMapCard(res, roomCandidates, recommendations) {
-  const highlightMap = buildRoomHighlights(recommendations || []);
+function renderRoomMapCard(res, roomCandidates) {
+  const highlightMap = buildRoomHighlights(roomCandidates || []);
   const primary = roomCandidates[0];
   const alternates = roomCandidates.slice(1);
   return `
@@ -595,12 +584,12 @@ function renderRoomTile(room, tags = []) {
   `;
 }
 
-function buildRoomHighlights(recommendations) {
+function buildRoomHighlights(roomCandidates) {
   const map = {};
-  recommendations.forEach((rec, idx) => {
-    if (!rec.roomCandidate || !rec.roomCandidate.room) return;
+  roomCandidates.forEach((candidate, idx) => {
+    if (!candidate || !candidate.room) return;
     const tag = idx === 0 ? "Primary" : `Alt ${idx}`;
-    const roomId = rec.roomCandidate.room.id;
+    const roomId = candidate.room.id;
     if (!map[roomId]) map[roomId] = [];
     map[roomId].push(tag);
   });
