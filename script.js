@@ -1,5 +1,44 @@
 const reservations = [
   {
+    id: "RES-1450",
+    guest: "Jessica Smith",
+    honorsStatus: "Gold",
+    arrival: "2024-09-02",
+    nights: 2,
+    roomType: "Queen + sofa",
+    lastStay: "Graduate Nashville",
+    stayScore: 86,
+    location: "Orlando, FL",
+    stayPurpose: "Family weekend",
+    complaints: ["missing couch bed on arrival"],
+    preferences: {
+      noise: "quiet",
+      view: "pool",
+      arrival: "afternoon",
+      towels: 6,
+      blankets: 2,
+      pillowCount: 4,
+      couchBed: "requested for child",
+      fitness: "checks gym within 30 mins of arrival",
+    },
+    behaviors: [
+      "checks gym on arrival",
+      "likely requests extra towels",
+      "used rideshare to hotel",
+    ],
+    rawData: {
+      arrivalWindow: "2:45pm",
+      checkoutHabit: "on-time",
+      tripPurposeDetail: "Weekend with husband and child",
+      poolInterest: "medium",
+      workspaceNeed: "none",
+      coffee: "drip + to-go cups",
+      transport: "rideshare",
+      paymentSource: "Amex with recent rideshare charges",
+      partySize: 3,
+    },
+  },
+  {
     id: "RES-4821",
     guest: "Alex Morgan",
     honorsStatus: "Gold",
@@ -221,30 +260,30 @@ function computeConfidence(base, adjustments = []) {
   return Math.max(55, Math.min(Math.round(score), 98));
 }
 
-const savedPreferenceKeys = ["noise", "view", "arrival"];
+const savedPreferenceKeys = ["noise", "view", "arrival", "couchBed"];
 
 function buildWelcomeRecommendation(res) {
   const arrivalWeight = res.preferences.arrival === "early" ? 8 : 4;
-  const transportWeight = res.rawData.transport === "rideshare" ? 6 : 3;
-  const confidence = computeConfidence(76, [arrivalWeight, transportWeight]);
+  const transportWeight = res.rawData.transport === "rideshare" ? 7 : 3;
+  const confidence = computeConfidence(78, [arrivalWeight, transportWeight]);
 
   return {
     id: "welcome",
-    label: "Welcome & walkable essentials",
-    description: `Payment on file shows ${res.rawData.paymentSource}; AI predicts they likely arrived via rideshare and prefer fast guidance. Offer water, confirm mobile key, and walk them to coffee/tea and the business center on arrival.`,
-    action: "Speedy check-in + amenity walk (AI-predicted)",
+    label: "Arrival & transit help",
+    description: `Payment on file shows ${res.rawData.paymentSource}; AI predicts they likely arrived via rideshare and may want quick next-steps. Offer water, confirm mobile key, and point them to a nearby rental car desk while sharing lobby coffee/tea and elevator locations.`,
+    action: "Check-in, hand rental-car directions, and orient to lobby",
     drivers: [
       `${res.rawData.arrivalWindow} arrival (saved)`,
-      `${res.rawData.checkoutHabit} checkout habit (saved)`,
       `${res.rawData.transport} traveler`,
+      `${res.rawData.checkoutHabit} checkout habit`,
     ],
-    locality: `${res.location.split(",")[0]} lobby: coffee/tea to the left · business center behind front desk · pool level 2`,
+    locality: `${res.location.split(",")[0]}: Hertz on Orange Ave (0.3 mi) · rideshare pickup at front drive · lobby coffee/tea by elevators`,
     dataPoints: [
-      `Likely values a short walk from rideshare drop (AI)`,
-      `Saved timing: ${res.rawData.arrivalWindow} arrival`,
-      res.rawData.poolInterest !== "low" ? "Likely interested in pool hours" : "Likely prefers coffee/tea guidance",
+      `Saved payment source suggests rideshare drop-off`,
+      `Likely wants wheels soon — share rental car option (AI)`,
+      res.rawData.poolInterest !== "low" ? "Pool interest medium — share hours" : "Share coffee/tea and business center locations",
     ],
-    rationale: `Keeps the welcome concise while likely matching their transit and timing preferences without promising a specific room.`,
+    rationale: `Keeps the arrival talk short while giving a realistic rental-car pointer and lobby navigation without over-promising services.`,
     confidence,
   };
 }
@@ -256,21 +295,21 @@ function buildComfortRecommendation(res) {
 
   return {
     id: "comfort",
-    label: "Likely comfort setup",
-    description: `AI predicts they likely appreciate a quick comfort setup: stage ${res.preferences.towels} towels, ${res.preferences.blankets} blanket(s), and ${res.preferences.pillowCount} pillows; offer extra water and note quiet hours since noise was previously flagged.`,
-    action: "Send linen & welcome amenity (AI-predicted)",
+    label: "Family in-room setup",
+    description: `AI predicts they likely want the sofa bed confirmed for the child and extra towels for ${res.rawData.partySize} guests given gym use on arrival. Stage ${res.preferences.towels} towels and ${res.preferences.blankets} blanket(s), and add two waters.`,
+    action: "Confirm sofa bed, send linens, add waters",
     drivers: [
-      `Saved noise pref: ${res.preferences.noise}`,
+      `${res.rawData.partySize} guests (saved)`,
       `${res.preferences.towels} towels likely preferred`,
-      `${res.complaints.length ? "Prior complaint noted" : "No active complaints"}`,
+      `${res.complaints.length ? "Prior complaint: couch bed" : "No active complaints"}`,
     ],
-    locality: `Deliver to assigned room after keying; log quiet-hours reminder`,
+    locality: `Deliver to assigned room after keying; note quiet hours for a likely quiet-preference guest`,
     dataPoints: [
-      `Likely values extra towels/blankets (AI)`,
-      `Saved request: ${res.rawData.tripPurposeDetail.toLowerCase()}`,
-      `Noise complaint flagged — remind about quiet hours`,
+      `Saved request: ${res.preferences.couchBed}`,
+      `Likely needs extra linens for gym + 3 guests (AI)`,
+      `Noise preference saved: ${res.preferences.noise}`,
     ],
-    rationale: `Focuses on realistic lobby/housekeeping moves without auto-assigning rooms while addressing likely comfort needs.`,
+    rationale: `Keeps the move practical for housekeeping: sofa bed, towels, and a simple water drop for a family arrival.`,
     confidence,
   };
 }
@@ -282,9 +321,9 @@ function buildLocalRecommendation(res) {
 
   return {
     id: "local",
-    label: "Likely walkable picks",
-    description: `AI suggests three walkable spots based on likely rideshare use from the Amex on file and ${res.stayPurpose.toLowerCase()} context. Share them verbally and print a simple map if asked.`,
-    action: "Share walkable dining & activity trio (AI-predicted)",
+    label: "Walkable food & activities",
+    description: `AI suggests nearby food and family-friendly activities based on likely rideshare use and ${res.stayPurpose.toLowerCase()} context. Share verbally and print a quick map if requested.`,
+    action: "Share dining + activity trio with map print option",
     drivers: [
       `${res.rawData.transport} / Amex on file`,
       `${res.stayPurpose.toLowerCase()}`,
@@ -304,6 +343,7 @@ function buildLocalRecommendation(res) {
 function buildLocalList(location) {
   const city = location.split(",")[0].trim();
   const recs = {
+    Orlando: "Point to Eola Market walk-up, Thornton Park eateries, Lake Eola play area",
     Austin: "Try Moonlight Brunch, Rainey Street tacos, Lady Bird Lake walk",
     Boston: "Recommend Seaport cafes, North End pasta, Charles River run",
     "New York": "Point to Bryant Park stroll, Midtown ramen, High Line sunset",
@@ -315,9 +355,17 @@ function buildLocalList(location) {
 
 function buildSummary(res) {
   const complaint = res.complaints.length ? `Flag ${res.complaints.join(" & ")}` : "No active complaints";
-  const sleep = res.preferences.noise === "quiet" ? "likely prioritizes quiet rest" : "likely okay with moderate noise";
   const arrival = res.preferences.arrival ? `saved ${res.preferences.arrival} arrival` : "flexible arrival";
-  return `${res.guest} is a ${res.honorsStatus} Honors guest traveling for ${res.stayPurpose}. Based on saved preferences we expect a ${res.preferences.view} view and ${arrival}, and AI predicts they likely favor ${res.preferences.pillows} pillows while traveling. ${complaint} noted for check-in coaching.`;
+  const transit = res.rawData.transport
+    ? `Payment and arrival show ${res.rawData.transport}; AI predicts they likely stay car-light until after check-in.`
+    : "";
+  const fitness = res.preferences.fitness
+    ? `Hilton profile shows she ${res.preferences.fitness}, so AI predicts she likely appreciates fast towel access.`
+    : "";
+  const viewPref = res.preferences.view ? `${res.preferences.view} view` : "standard view";
+  const party = res.rawData.partySize ? `${res.rawData.partySize} guests noted` : "";
+
+  return `${res.guest} is a ${res.honorsStatus} Honors guest traveling for ${res.stayPurpose}. Saved preferences: ${viewPref}, ${arrival}, ${party}. ${transit} ${fitness} ${complaint} noted for check-in coaching.`;
 }
 
 function renderReservationList() {
@@ -531,12 +579,14 @@ function renderPreferences(preferences) {
 function pickTopPreferences(preferences) {
   const priority = [
     "noise",
+    "couchBed",
     "pillows",
     "view",
     "arrival",
     "towels",
     "blankets",
     "pillowCount",
+    "fitness",
     "desk",
     "dining",
     "amenity",
