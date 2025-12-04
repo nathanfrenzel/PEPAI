@@ -345,25 +345,27 @@ function buildLocalRecommendation(res) {
 function buildLateCheckoutUpsell(res) {
   const habitWeight = res.rawData.checkoutHabit?.includes("late") ? 9 : 3;
   const partyWeight = res.rawData.partySize && res.rawData.partySize > 1 ? 5 : 3;
-  const confidence = computeConfidence(72, [habitWeight, partyWeight]);
+  const loyaltyWeight = res.honorsStatus === "Diamond" ? 9 : res.honorsStatus === "Gold" ? 7 : 4;
+  const confidence = computeConfidence(74, [habitWeight, partyWeight, loyaltyWeight]);
 
   return {
     id: "late-checkout",
-    label: "Late checkout upsell",
-    description: `Saved checkout notes show they likely depart later; offer a 2pm late checkout at $25 to match their pattern and give housekeeping notice early.`,
-    action: "Offer paid 2pm late checkout ($25) and note in folio",
+    label: "Dining + late checkout perk",
+    description: `Saved checkout notes show they likely depart later; extend a Hilton Honors thank-you with 20% off the on-site restaurant and a 50% discount on 2pm late checkout (likely preferred).`,
+    action: "Apply 20% dining perk and offer 2pm late checkout at 50% off",
     drivers: [
       `${res.rawData.checkoutHabit} (saved)`,
       `${res.rawData.arrivalWindow} arrival`,
       `${res.rawData.partySize || 2} guests likely`,
+      `${res.honorsStatus} loyalty tier`,
     ],
-    locality: `Confirm availability in PMS and flag housekeeping; waive if loyalty policy applies.`,
+    locality: `Confirm availability in PMS, flag housekeeping for 2pm, and apply dining code to folio.`,
     dataPoints: [
       `Checkout behavior suggests later departures (saved)`,
       `Family trip likely benefits from slower exit (AI)`,
-      `Keeps departure aligned with housekeeping timing`,
+      `Loyalty tier supports 50% off late checkout + 20% dining`,
     ],
-    rationale: `Grounded upsell tied to known checkout patterns; positions a realistic $25 offer while keeping staff in control.`,
+    rationale: `Keeps the offer realistic: pair a small dining perk with a loyalty-aligned late-checkout discount for a likely late departure without overpromising.`,
     confidence,
   };
 }
