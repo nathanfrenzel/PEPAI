@@ -25,10 +25,11 @@ const reservations = [
       "checks gym on arrival",
       "likely requests extra towels",
       "used rideshare to hotel",
+      "likely requests late checkout",
     ],
     rawData: {
       arrivalWindow: "2:45pm",
-      checkoutHabit: "on-time",
+      checkoutHabit: "often late checkout",
       tripPurposeDetail: "Weekend with husband and child",
       poolInterest: "medium",
       workspaceNeed: "none",
@@ -248,8 +249,9 @@ function generateRecommendations(res) {
   const welcome = buildWelcomeRecommendation(res);
   const comfort = buildComfortRecommendation(res);
   const local = buildLocalRecommendation(res);
+  const lateCheckout = buildLateCheckoutUpsell(res);
 
-  return [welcome, comfort, local].sort((a, b) => b.confidence - a.confidence);
+  return [welcome, comfort, local, lateCheckout].sort((a, b) => b.confidence - a.confidence);
 }
 
 function computeConfidence(base, adjustments = []) {
@@ -336,6 +338,32 @@ function buildLocalRecommendation(res) {
       `Likely prefers nearby options to avoid extra transit`,
     ],
     rationale: `Keeps recommendations realistic to Hilton data (payment + purpose) and favors nearby options they can likely walk to from drop-off.`,
+    confidence,
+  };
+}
+
+function buildLateCheckoutUpsell(res) {
+  const habitWeight = res.rawData.checkoutHabit?.includes("late") ? 9 : 3;
+  const partyWeight = res.rawData.partySize && res.rawData.partySize > 1 ? 5 : 3;
+  const confidence = computeConfidence(72, [habitWeight, partyWeight]);
+
+  return {
+    id: "late-checkout",
+    label: "Late checkout upsell",
+    description: `Saved checkout notes show they likely depart later; offer a 2pm late checkout at $25 to match their pattern and give housekeeping notice early.`,
+    action: "Offer paid 2pm late checkout ($25) and note in folio",
+    drivers: [
+      `${res.rawData.checkoutHabit} (saved)`,
+      `${res.rawData.arrivalWindow} arrival`,
+      `${res.rawData.partySize || 2} guests likely`,
+    ],
+    locality: `Confirm availability in PMS and flag housekeeping; waive if loyalty policy applies.`,
+    dataPoints: [
+      `Checkout behavior suggests later departures (saved)`,
+      `Family trip likely benefits from slower exit (AI)`,
+      `Keeps departure aligned with housekeeping timing`,
+    ],
+    rationale: `Grounded upsell tied to known checkout patterns; positions a realistic $25 offer while keeping staff in control.`,
     confidence,
   };
 }
