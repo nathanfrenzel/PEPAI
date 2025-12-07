@@ -384,26 +384,28 @@ function buildLocalList(location) {
 }
 
 function buildSummary(res) {
-  const savedSignals = [];
-  const predictedSignals = [];
+  const points = [];
 
-  if (res.rawData.partySize) savedSignals.push(`traveling with ${res.rawData.partySize} guest(s)`);
-  if (res.preferences.arrival) savedSignals.push(`saved ${res.preferences.arrival} arrival`);
-  if (res.preferences.view) savedSignals.push(`prefers a ${res.preferences.view} view`);
-  if (res.preferences.couchBed) savedSignals.push(res.preferences.couchBed);
-  if (res.rawData.transport) predictedSignals.push(`likely car-light after ${res.rawData.transport}`);
-  if (res.preferences.fitness) predictedSignals.push(`likely heads to the gym on arrival`);
-  if (res.behaviors && res.behaviors.includes("likely requests late checkout"))
-    predictedSignals.push("often leans late on departure");
-  if (res.complaints.length) predictedSignals.push(`prior complaint: ${res.complaints[0]}`);
+  points.push(
+    `${res.guest} is a ${res.honorsStatus} Honors guest from ${res.location} on ${res.stayPurpose.toLowerCase()} for ${res.nights} night(s) in a ${res.roomType}.`
+  );
 
-  const intro = `${res.guest} is a ${res.honorsStatus} Honors guest visiting from ${res.location} for ${res.stayPurpose.toLowerCase()}, staying ${res.nights} night(s) in a ${res.roomType}.`;
-  const savedLine = savedSignals.length ? `Profile notes show ${savedSignals.join(", ")}.` : "";
-  const predictedLine = predictedSignals.length
-    ? `AI infers they likely appreciate ${predictedSignals.join(", ")}.`
-    : "";
+  const arrivalHint = res.rawData.transport
+    ? `Likely arriving via ${res.rawData.transport}, so quick guidance after check-in helps the party of ${res.rawData.partySize || 2}.`
+    : `Likely appreciates a quick, guided arrival for the party of ${res.rawData.partySize || 2}.`;
+  points.push(arrivalHint);
 
-  return `${intro} ${savedLine} ${predictedLine}`.trim();
+  const comfortHint = res.complaints.length
+    ? `Past stay feedback suggests double-checking sleep setup and seating; a friendly note about the ${res.complaints[0]} keeps trust.`
+    : "Likely values a calm room setup with enough seating for the group.";
+  points.push(comfortHint);
+
+  const routineHint = res.behaviors?.includes("checks gym on arrival")
+    ? "Likely heads to the gym right after drop-off; extra towels and nearby hydration points feel thoughtful."
+    : "Likely appreciates simple routines honored—offer quick amenity pointers.";
+  points.push(routineHint);
+
+  return points;
 }
 
 function renderReservationList() {
@@ -447,7 +449,18 @@ function selectReservation(index, element) {
             <div>
               <p class="eyebrow">AI-generated profile</p>
               <h3>${res.guest}</h3>
-              <p class="summary-copy">${profileSummary}</p>
+              <div class="summary-points">
+                ${profileSummary
+                  .map(
+                    (point) => `
+                      <div class="summary-chip">
+                        <span class="summary-dot" aria-hidden="true"></span>
+                        <div>${point}</div>
+                      </div>
+                    `
+                  )
+                  .join("")}
+              </div>
           </div>
           <div class="summary-badges">
             <span class="pill">${res.honorsStatus} Honors</span>
