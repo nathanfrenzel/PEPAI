@@ -384,18 +384,26 @@ function buildLocalList(location) {
 }
 
 function buildSummary(res) {
-  const complaint = res.complaints.length ? `Flag ${res.complaints.join(" & ")}` : "No active complaints";
-  const arrival = res.preferences.arrival ? `saved ${res.preferences.arrival} arrival` : "flexible arrival";
-  const transit = res.rawData.transport
-    ? `Payment and arrival show ${res.rawData.transport}; AI predicts they likely stay car-light until after check-in.`
-    : "";
-  const fitness = res.preferences.fitness
-    ? `Hilton profile shows she ${res.preferences.fitness}, so AI predicts she likely appreciates fast towel access.`
-    : "";
-  const viewPref = res.preferences.view ? `${res.preferences.view} view` : "standard view";
-  const party = res.rawData.partySize ? `${res.rawData.partySize} guests noted` : "";
+  const savedSignals = [];
+  const predictedSignals = [];
 
-  return `${res.guest} is a ${res.honorsStatus} Honors guest traveling for ${res.stayPurpose}. Saved preferences: ${viewPref}, ${arrival}, ${party}. ${transit} ${fitness} ${complaint} noted for check-in coaching.`;
+  if (res.rawData.partySize) savedSignals.push(`traveling with ${res.rawData.partySize} guest(s)`);
+  if (res.preferences.arrival) savedSignals.push(`saved ${res.preferences.arrival} arrival`);
+  if (res.preferences.view) savedSignals.push(`prefers a ${res.preferences.view} view`);
+  if (res.preferences.couchBed) savedSignals.push(res.preferences.couchBed);
+  if (res.rawData.transport) predictedSignals.push(`likely car-light after ${res.rawData.transport}`);
+  if (res.preferences.fitness) predictedSignals.push(`likely heads to the gym on arrival`);
+  if (res.behaviors && res.behaviors.includes("likely requests late checkout"))
+    predictedSignals.push("often leans late on departure");
+  if (res.complaints.length) predictedSignals.push(`prior complaint: ${res.complaints[0]}`);
+
+  const intro = `${res.guest} is a ${res.honorsStatus} Honors guest visiting from ${res.location} for ${res.stayPurpose.toLowerCase()}, staying ${res.nights} night(s) in a ${res.roomType}.`;
+  const savedLine = savedSignals.length ? `Profile notes show ${savedSignals.join(", ")}.` : "";
+  const predictedLine = predictedSignals.length
+    ? `AI infers they likely appreciate ${predictedSignals.join(", ")}.`
+    : "";
+
+  return `${intro} ${savedLine} ${predictedLine}`.trim();
 }
 
 function renderReservationList() {
