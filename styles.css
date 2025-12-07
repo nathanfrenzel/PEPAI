@@ -642,8 +642,16 @@ a {
 
 .summary-top {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.summary-head {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .summary-copy {

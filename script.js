@@ -446,9 +446,17 @@ function selectReservation(index, element) {
     <div class="summary-grid">
         <div class="card summary">
           <div class="summary-top">
-            <div>
-              <p class="eyebrow">AI-generated profile</p>
-              <h3>${res.guest}</h3>
+            <div class="summary-head">
+              <div>
+                <p class="eyebrow">AI-generated profile</p>
+                <h3>${res.guest}</h3>
+              </div>
+              <div class="summary-badges">
+                <span class="pill">${res.honorsStatus} Honors</span>
+                <span class="pill">Stayscore ${res.stayScore}</span>
+                <span class="pill">${res.stayPurpose}</span>
+              </div>
+            </div>
               <div class="summary-points">
                 ${profileSummary
                   .map(
@@ -461,12 +469,6 @@ function selectReservation(index, element) {
                   )
                   .join("")}
               </div>
-          </div>
-          <div class="summary-badges">
-            <span class="pill">${res.honorsStatus} Honors</span>
-            <span class="pill">Stayscore ${res.stayScore}</span>
-            <span class="pill">${res.stayPurpose}</span>
-          </div>
         </div>
       </div>
         <div class="card metrics">
