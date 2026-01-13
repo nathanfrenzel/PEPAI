@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hilton Front Desk AI Pilot</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand-stack">
+      <div class="pep-mark">PEP</div>
+      <div>
+        <p class="eyebrow">Property Engagement Platform</p>
+        <h1>Front Desk Console</h1>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-ghost">Search</button>
+      <button class="btn btn-ghost">New Reservation</button>
+      <button class="btn btn-primary">Start Check-in</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel reservations">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Arrivals</p>
+          <h2>Today</h2>
+        </div>
+        <div class="pill" id="selection-pill">Select a reservation</div>
+      </div>
+      <ul id="reservation-list" class="reservation-list"></ul>
+    </section>
+
+    <section class="panel detail">
+      <div class="panel-header">
+        <p class="eyebrow">Guest workspace</p>
+        <h2>Profile &amp; actions</h2>
+      </div>
+
+      <div class="detail-body" id="detail-body">
+        <p class="muted">Choose a guest to load AI profile, key preferences, and recommended moves.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="data-window" class="data-window hidden" role="dialog" aria-modal="true" aria-label="Raw data and predictive analytics">
+    <div class="data-window__sheet">
+      <div class="data-window__header">
+        <div>
+          <p class="eyebrow">Deep dive</p>
+          <h3>Raw data &amp; predictive analytics</h3>
+        </div>
+        <button id="data-window-close" class="btn btn-ghost">Close</button>
+      </div>
+      <div class="data-window__grid" id="data-window-grid"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
